@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+
+  ame_db:
+    image: postgres
+    container_name: ame_db
+    volumes:
+      - ./ame_db/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=autoMarketEMU
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  ame_app:
+    build: .
+    container_name: autoMarketEMU
+    volumes:
+      - ./autoMarketEMU/data:/autoMarketEMU
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    environment:
+      - POSTGRES_DB=autoMarketEMU
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - ame_db
+

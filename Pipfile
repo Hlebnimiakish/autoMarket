@@ -11,6 +11,10 @@ flake8 = "*"
 mypy = "*"
 pylint = "*"
 pytest = "*"
+django-countries = "*"
+docker = "*"
+docker-compose = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
