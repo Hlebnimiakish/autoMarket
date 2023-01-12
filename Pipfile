@@ -6,17 +6,17 @@ name = "pypi"
 [packages]
 django = "*"
 djangorestframework = "*"
-black = "*"
-flake8 = "*"
 mypy = "*"
-pylint = "*"
-pytest = "*"
 django-countries = "*"
 docker = "*"
 docker-compose = "*"
 psycopg2-binary = "*"
 
 [dev-packages]
+pylint = "*"
+pytest = "*"
+black = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.10"

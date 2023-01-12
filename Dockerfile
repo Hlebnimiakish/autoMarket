@@ -5,11 +5,11 @@ RUN pip install pipenv
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /ame
+WORKDIR /auto_market_emu
 
-COPY Pipfile Pipfile.lock /ame/
+COPY Pipfile Pipfile.lock /auto_market_emu/
 
 RUN pipenv install --dev --system --deploy --ignore-pipfile
 
-COPY autoMarketEMU /ame/
+COPY ame_project /auto_market_emu/
 
