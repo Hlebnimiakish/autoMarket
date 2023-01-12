@@ -6,26 +6,22 @@ services:
     image: postgres
     container_name: ame_db
     volumes:
-      - ./ame_db/data:/var/lib/postgresql/data
+      - ${MY_DIR}:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=ame_project
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
 
   ame_app:
     build:
       dockerfile: ./Dockerfile
     container_name: auto_market_emu
-    volumes:
-      - ./ame_project/data:/ame_project
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000
-    environment:
-      - POSTGRES_DB=ame_project
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - SECRET_KEY=django-insecure-h1(st_#_i@y*+@vyezayzvpdiy(0-t)9p5e+mk_k^u&44r%+bu
     depends_on:
       - ame_db
+    env_file:
+      - .env
 
