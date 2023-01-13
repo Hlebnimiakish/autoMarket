@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+
+  ame_db:
+    image: postgres
+    container_name: ame_db
+    volumes:
+      - ${MY_DIR}:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+
+  ame_app:
+    build:
+      dockerfile: ./Dockerfile
+    container_name: auto_market_emu
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    depends_on:
+      - ame_db
+    env_file:
+      - .env
+
