@@ -1,5 +1,59 @@
 from django.db import models
+from django.utils import timezone
 from django_countries.fields import CountryField
+from django.utils.translation import gettext_lazy as _
+
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser, UnicodeUsernameValidator, PermissionsMixin
+from .ameuser_manager import AmeUserManager
+
+
+class AmeUserModel(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_("email address"),
+                              blank=False,
+                              null=False,
+                              unique=True,
+                              error_messages={
+                                  "unique": _("A user with that email already exists."),
+                              }
+                              )
+    username_validator = UnicodeUsernameValidator()
+    username = models.CharField(
+        _("username"),
+        max_length=150,
+        unique=True,
+        help_text=_(
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        ),
+        validators=[username_validator],
+        error_messages={
+            "unique": _("A user with that username already exists."),
+        },
+    )
+    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
+    is_staff = models.BooleanField(default=False)
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+    USER_TYPE_CHOICES = [
+        ("DEALER", "Dealer"),
+        ("SELLER", "Seller"),
+        ("BUYER", "Buyer")
+    ]
+    user_type = models.CharField(max_length=50,
+                                 choices=USER_TYPE_CHOICES,
+                                 blank=False,
+                                 null=False)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(
+        _("active"),
+        default=True,
+        help_text=_(
+            "Designates whether this user should be treated as active. "
+            "Unselect this instead of deleting accounts."
+        ),
+    )
+
+    objects = AmeUserManager()
 
 
 class BaseActiveStatusModel(models.Model):
@@ -15,6 +69,7 @@ class AutoDealerModel(BaseActiveStatusModel):
     name = models.CharField(max_length=100)
     home_country = CountryField()
     balance = models.DecimalField(max_digits=12, decimal_places=2)
+    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
 
 
 class BaseAutoSpecificationsModel(models.Model):
@@ -99,6 +154,7 @@ class AutoSellersModel(BaseActiveStatusModel):
     name = models.CharField(max_length=100)
     year_of_creation = models.IntegerField()
     clients_number = models.IntegerField()
+    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
 
 
 class SellersCarParkModel(BaseCurrentCarParkModel, BaseActiveStatusModel):
@@ -129,6 +185,7 @@ class CarBuyersModel(BaseActiveStatusModel):
     lastname = models.CharField(max_length=100)
     balance = models.DecimalField(max_digits=12, decimal_places=2)
     drivers_license_number = models.CharField(max_length=100)
+    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
 
 
 class CarBuyersHistoryModel(models.Model):
@@ -137,11 +194,13 @@ class CarBuyersHistoryModel(models.Model):
     bought_quantity = models.IntegerField()
     car_price = models.DecimalField(max_digits=12, decimal_places=2)
     deal_sum = models.DecimalField(max_digits=12, decimal_places=2)
+    buyer = models.ForeignKey('CarBuyersModel', on_delete=models.CASCADE)
 
 
 class OffersModel(BaseActiveStatusModel):
     max_price = models.DecimalField(max_digits=12, decimal_places=2)
     car_model = models.ForeignKey('MarketAvailableCarsModel', on_delete=models.CASCADE)
+    buyer = models.ForeignKey('CarBuyersModel', on_delete=models.CASCADE)
 
 
 class BasePromoModel(BaseActiveStatusModel):
@@ -152,6 +211,7 @@ class BasePromoModel(BaseActiveStatusModel):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     discount_size = models.DecimalField(max_digits=5, decimal_places=2)
+    source = models.ForeignKey('AutoSellersModel', on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
@@ -160,10 +220,12 @@ class BasePromoModel(BaseActiveStatusModel):
 class DealersPromoModel(BasePromoModel):
     promo_aims = models.ManyToManyField('CarBuyersModel')
     promo_cars = models.ManyToManyField('DealerCarParkModel')
+    source = models.ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
 
 
 class SellersPromoModel(BasePromoModel):
     promo_cars = models.ManyToManyField('SellersCarParkModel')
+
 
 
 
