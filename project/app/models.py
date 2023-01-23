@@ -3,12 +3,12 @@ from django.utils import timezone
 from django_countries.fields import CountryField
 from django.utils.translation import gettext_lazy as _
 
-from django.contrib.auth.models import AbstractUser, AbstractBaseUser, UnicodeUsernameValidator, PermissionsMixin
-from .ameuser_manager import AmeUserManager
+from django.contrib.auth.models import AbstractBaseUser, UnicodeUsernameValidator, PermissionsMixin
+from .custom_user_manager import CustomUserManager
 
 
-class AmeUserModel(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(_("email address"),
+class CustomUserModel(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_("email"),
                               blank=False,
                               null=False,
                               unique=True,
@@ -53,7 +53,7 @@ class AmeUserModel(AbstractBaseUser, PermissionsMixin):
         ),
     )
 
-    objects = AmeUserManager()
+    objects = CustomUserManager()
 
 
 class BaseActiveStatusModel(models.Model):
@@ -68,8 +68,8 @@ class BaseActiveStatusModel(models.Model):
 class AutoDealerModel(BaseActiveStatusModel):
     name = models.CharField(max_length=100)
     home_country = CountryField()
-    balance = models.DecimalField(max_digits=12, decimal_places=2)
-    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    user = models.OneToOneField('CustomUserModel', on_delete=models.CASCADE)
 
 
 class BaseAutoSpecificationsModel(models.Model):
@@ -120,25 +120,25 @@ class BaseAutoSpecificationsModel(models.Model):
         abstract = True
 
 
-class DealerSearchCarSpecificationsModel(BaseAutoSpecificationsModel, BaseActiveStatusModel):
+class DealerSearchCarSpecificationModel(BaseAutoSpecificationsModel, BaseActiveStatusModel):
     dealer = models.ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
     min_year_of_production = models.IntegerField()
 
 
-class MarketAvailableCarsModel(BaseAutoSpecificationsModel, BaseActiveStatusModel):
+class MarketAvailableCarModel(BaseAutoSpecificationsModel, BaseActiveStatusModel):
     brand_name = models.CharField(max_length=100)
     car_model_name = models.CharField(max_length=100)
     year_of_production = models.IntegerField()
-    demand_level = models.DecimalField(max_digits=5, decimal_places=2)
+    demand_level = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
 
 
-class DealerSuitableCarModelsModel(BaseActiveStatusModel):
+class DealerSuitableCarModel(BaseActiveStatusModel):
     dealer = models.ManyToManyField('AutoDealerModel')
-    car_model = models.ManyToManyField('MarketAvailableCarsModel')
+    car_model = models.ManyToManyField('MarketAvailableCarModel')
 
 
 class BaseCurrentCarParkModel(models.Model):
-    car_model_id = models.ForeignKey('MarketAvailableCarsModel', on_delete=models.CASCADE)
+    car_model_id = models.ForeignKey('MarketAvailableCarModel', on_delete=models.CASCADE)
     available_number = models.IntegerField()
     car_price = models.DecimalField(max_digits=12, decimal_places=2)
 
@@ -147,17 +147,18 @@ class BaseCurrentCarParkModel(models.Model):
 
 
 class DealerCarParkModel(BaseCurrentCarParkModel, BaseActiveStatusModel):
-    pass
+    dealer = models.OneToOneField('AutoDealerModel', on_delete=models.CASCADE)
 
 
-class AutoSellersModel(BaseActiveStatusModel):
+class AutoSellerModel(BaseActiveStatusModel):
     name = models.CharField(max_length=100)
     year_of_creation = models.IntegerField()
-    clients_number = models.IntegerField()
-    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
+    clients_number = models.IntegerField(null=True, blank=True)
+    user = models.OneToOneField('CustomUserModel', on_delete=models.CASCADE)
 
 
-class SellersCarParkModel(BaseCurrentCarParkModel, BaseActiveStatusModel):
+class SellerCarParkModel(BaseCurrentCarParkModel, BaseActiveStatusModel):
+    seller = models.OneToOneField('AutoSellerModel', on_delete=models.CASCADE)
     pass
 
 
@@ -173,59 +174,57 @@ class BaseSalesHistoryModel(models.Model):
 
 
 class DealerSalesHistoryModel(BaseSalesHistoryModel):
-    buyer = models.ForeignKey('CarBuyersModel', on_delete=models.CASCADE)
+    buyer = models.ForeignKey('CarBuyerModel', on_delete=models.CASCADE)
 
 
 class SellerSalesHistoryModel(BaseSalesHistoryModel):
     pass
 
 
-class CarBuyersModel(BaseActiveStatusModel):
+class CarBuyerModel(BaseActiveStatusModel):
     firstname = models.CharField(max_length=100)
     lastname = models.CharField(max_length=100)
-    balance = models.DecimalField(max_digits=12, decimal_places=2)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     drivers_license_number = models.CharField(max_length=100)
-    user = models.OneToOneField('AmeUserModel', on_delete=models.CASCADE)
+    user = models.OneToOneField('CustomUserModel', on_delete=models.CASCADE)
 
 
-class CarBuyersHistoryModel(models.Model):
-    bought_car_model = models.ForeignKey('MarketAvailableCarsModel', on_delete=models.CASCADE)
+class CarBuyerHistoryModel(models.Model):
+    bought_car_model = models.ForeignKey('MarketAvailableCarModel', on_delete=models.CASCADE)
     auto_dealer = models.ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
     bought_quantity = models.IntegerField()
     car_price = models.DecimalField(max_digits=12, decimal_places=2)
     deal_sum = models.DecimalField(max_digits=12, decimal_places=2)
-    buyer = models.ForeignKey('CarBuyersModel', on_delete=models.CASCADE)
+    buyer = models.ForeignKey('CarBuyerModel', on_delete=models.CASCADE)
 
 
-class OffersModel(BaseActiveStatusModel):
+class OfferModel(BaseActiveStatusModel):
     max_price = models.DecimalField(max_digits=12, decimal_places=2)
-    car_model = models.ForeignKey('MarketAvailableCarsModel', on_delete=models.CASCADE)
-    buyer = models.ForeignKey('CarBuyersModel', on_delete=models.CASCADE)
+    car_model = models.ForeignKey('MarketAvailableCarModel', on_delete=models.CASCADE)
+    creator = models.OneToOneField('CarBuyerModel', on_delete=models.CASCADE)
 
 
 class BasePromoModel(BaseActiveStatusModel):
     promo_name = models.CharField(max_length=100)
     promo_description = models.TextField()
-    promo_cars = models.ManyToManyField('MarketAvailableCarsModel')
-    promo_aims = models.ManyToManyField('AutoDealerModel')
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     discount_size = models.DecimalField(max_digits=5, decimal_places=2)
-    source = models.ForeignKey('AutoSellersModel', on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
 
 
-class DealersPromoModel(BasePromoModel):
-    promo_aims = models.ManyToManyField('CarBuyersModel')
+class DealerPromoModel(BasePromoModel):
+    promo_aims = models.ManyToManyField('CarBuyerModel')
     promo_cars = models.ManyToManyField('DealerCarParkModel')
-    source = models.ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
+    creator = models.OneToOneField('AutoDealerModel', on_delete=models.CASCADE)
 
 
-class SellersPromoModel(BasePromoModel):
-    promo_cars = models.ManyToManyField('SellersCarParkModel')
-
+class SellerPromoModel(BasePromoModel):
+    promo_cars = models.ManyToManyField('SellerCarParkModel')
+    promo_aims = models.ManyToManyField('AutoDealerModel')
+    creator = models.OneToOneField('AutoSellerModel', on_delete=models.CASCADE)
 
 
 
