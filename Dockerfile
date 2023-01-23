@@ -11,5 +11,5 @@ COPY Pipfile Pipfile.lock /auto_market_emu/
 
 RUN pipenv install --dev --system --deploy --ignore-pipfile
 
-COPY ame_project /auto_market_emu/
+COPY project /auto_market_emu/
 
