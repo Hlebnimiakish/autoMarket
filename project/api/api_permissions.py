@@ -1,16 +1,26 @@
+#type: ignore
+
+#import typing
 from rest_framework import permissions
+from rest_framework.request import Request
+
+#from project.user_app.models import CustomUserModel
 
 
-class SafeOrIsOwnerOrAdmin(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        return obj.user == request.user or bool(request.user and request.user.is_staff)
+# class CustomUserRequest(Request):
+#     user: CustomUserModel
+#
+#
+# class CustomBasePermission(permissions.BasePermission):
+#     def has_permission(self, request: CustomUserRequest, view: APIView) -> bool:
+#         return True
+#
+#     def has_object_permission(self, request: CustomUserRequest, view: APIView, obj: typing.Any) -> bool:
+#         return True
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user and request.user.is_staff:
             return True
         elif hasattr(obj, 'user'):
@@ -23,51 +33,61 @@ class IsOwnerOrAdmin(permissions.BasePermission):
             return obj.buyer == request.user
         elif hasattr(obj, 'creator'):
             return obj.creator == request.user
+        return False
 
 
 class IsDealer(permissions.BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view) -> bool:
         if request.user.user_type == 'DEALER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user.user_type == 'DEALER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
 
 class IsSeller(permissions.BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view) -> bool:
         if request.user.user_type == 'SELLER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user.user_type == 'SELLER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
 
 class IsBuyer(permissions.BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view) -> bool:
         if request.user.user_type == 'BUYER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user.user_type == 'BUYER' or bool(request.user and request.user.is_staff):
             return True
+        return False
 
 
 class IsThisUser(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user == obj.id:
             return True
+        return False
 
 
 class IsVerified(permissions.BasePermission):
     message = "You have to be verified to perform this action."
 
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view) -> bool:
         if request.user.is_verified:
             return True
+        return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user.is_verified:
             return True
+        return False

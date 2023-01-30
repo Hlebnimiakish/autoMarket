@@ -1,3 +1,4 @@
+#type: ignore
 """
 Django settings for root project.
 
@@ -43,7 +44,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_countries",
 
-    "app",
+    "user_app",
+    "car_parks_app",
+    "cars_app",
+    "offers_app",
+    "promos_app",
+    "sales_history_app",
     "api",
 ]
 
@@ -83,7 +89,7 @@ WSGI_APPLICATION = "root.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgres",
+        "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.getenv('POSTGRES_DB'),
         "USER": os.getenv('POSTGRES_USER'),
         "PASSWORD": os.getenv('POSTGRES_PASSWORD'),
@@ -140,5 +146,4 @@ REST_FRAMEWORK = {
     ]
 }
 
-AUTH_USER_MODEL = "app.CustomUserModel"
-
+AUTH_USER_MODEL = "user_app.CustomUserModel"

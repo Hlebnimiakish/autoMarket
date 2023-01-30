@@ -1,2 +1,4 @@
 .idea
 .env
+.pre-commit-config.yaml
+mypy.ini
