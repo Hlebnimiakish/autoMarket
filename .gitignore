@@ -2,3 +2,4 @@
 .env
 .pre-commit-config.yaml
 mypy.ini
+.flake8

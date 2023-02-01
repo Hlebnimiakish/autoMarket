@@ -1,88 +1,94 @@
-from django.contrib.auth.models import AnonymousUser
-from rest_framework.request import Request
-from rest_framework import viewsets, status
-from rest_framework.mixins import CreateModelMixin, ListModelMixin
-from django.shortcuts import get_object_or_404
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework import generics
+# mypy: disable-error-code=override
+
+from typing import Type
+
+from api_permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin, IsSeller,
+                             IsThisUser, IsVerified)
 from django.contrib.auth import login, logout
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, serializers, status, viewsets
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
+from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.views import APIView
-import typing
-from django.db import models
-from rest_framework import serializers
-
-from serializers import AutoDealerSerializer, AutoSellersSerializer, CustomUserSerializer, OffersSerializer, \
-    AutoDealerFrontSerializer, AutoSellerFrontSerializer, CarBuyersFrontSerializer, CarBuyersSerializer, \
-    MarkerAvailableCarsModelSerializer, DealerSearchCarSpecificationsSerializer, DealerSuitableCarModelsSerializer, \
-    DealerCarParkSerializer, SellersCarParkSerializer, DealersPromoSerializer, SellersPromoSerializer
-from user_app.models import CustomUserModel, AutoDealerModel, DealerSearchCarSpecificationModel, MarketAvailableCarModel, \
-    DealerSuitableCarModel, DealerCarParkModel, AutoSellerModel, SellerCarParkModel, DealerSalesHistoryModel, \
-    SellerSalesHistoryModel, CarBuyerModel, CarBuyerHistoryModel, OfferModel, DealerPromoModel, SellerPromoModel,\
-    BaseActiveStatusModel
-from api_permissions import IsOwnerOrAdmin, IsDealer, IsSeller, IsBuyer, IsThisUser, IsVerified
-
-# M = typing.TypeVar('M', bound=models.Model | BaseActiveStatusModel, covariant=True)
-# S = typing.TypeVar('S', bound=serializers.ModelSerializer, covariant=True)
-# UM = typing.TypeVar('UM', bound=AutoSellerModel | AutoDealerModel | CarBuyerModel | CustomUserModel, covariant=True)
+from serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
+                         AutoSellerFrontSerializer, AutoSellersSerializer,
+                         CarBuyersFrontSerializer, CarBuyersSerializer,
+                         CustomUserSerializer, DealerCarParkSerializer,
+                         DealerSearchCarSpecificationsSerializer,
+                         DealersPromoSerializer,
+                         DealerSuitableCarModelsSerializer,
+                         MarkerAvailableCarsModelSerializer, OffersSerializer,
+                         SellersCarParkSerializer, SellersPromoSerializer)
+from user_app.models import (AutoDealerModel, AutoSellerModel, BaseModel,
+                             CarBuyerHistoryModel, CarBuyerModel,
+                             CustomUserModel, DealerCarParkModel,
+                             DealerPromoModel, DealerSalesHistoryModel,
+                             DealerSearchCarSpecificationModel,
+                             DealerSuitableCarModel, MarketAvailableCarModel,
+                             OfferModel, SellerCarParkModel, SellerPromoModel,
+                             SellerSalesHistoryModel)
 
 
 class CustomRequest(Request):
     user: CustomUserModel
 
 
-class BaseForOtherUsersView(viewsets.ViewSet):
-    model: typing.Type[BaseActiveStatusModel]
-    serializer: typing.Type[serializers.ModelSerializer]
+class BaseReadOnlyView(viewsets.ViewSet):
+    model: Type[BaseModel]
+    serializer: Type[serializers.ModelSerializer]
 
     def list(self, request: CustomRequest) -> Response:
         objs_set = self.model.objects.filter(is_active=True)
         serialized_objs = self.serializer(objs_set, many=True)
         return Response(serialized_objs.data)
 
-    def retrieve(self, request: CustomRequest, id: int | None = None) -> Response:
+    def retrieve(self, request: CustomRequest, id: int) -> Response:
         objs_set = self.model.objects.filter(is_active=True)
         obj = get_object_or_404(objs_set, id=id)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
 
-class BaseBondedCarsView(BaseForOtherUsersView):
+class BaseBondedCarView(viewsets.ViewSet):
+    model: Type[BaseModel]
+    serializer: Type[serializers.ModelSerializer]
     filter_add_data: str
 
-    def retrieve(self, request: CustomRequest, id: int | None = None) -> Response:
-        all_list_personal = self.model.objects.filter(is_active=True, **{self.filter_add_data: id})
+    def list(self, request: CustomRequest) -> Response:
+        objs_set = self.model.objects.filter(is_active=True)
+        serialized_objs = self.serializer(objs_set, many=True)
+        return Response(serialized_objs.data)
+
+    def retrieve(self, request: CustomRequest, id: int) -> Response:
+        all_list_personal = self.model.objects.filter(is_active=True,
+                                                      **{self.filter_add_data: id})
         serialized_list_personal = self.serializer(all_list_personal, many=True)
         return Response(serialized_list_personal.data)
 
 
-class BaseRUDView(viewsets.ViewSet):
-    model: typing.Type[BaseActiveStatusModel | typing.Any]
-    serializer: typing.Type[serializers.ModelSerializer]
+class BaseOwnModelRUDView(APIView):
+    model: Type[BaseModel]
+    serializer: Type[serializers.ModelSerializer]
     user_data: str
-    user_model: typing.Type[AutoSellerModel | AutoDealerModel | CarBuyerModel | typing.Any]
+    user_model: Type[BaseModel]
 
-    def profile_getter(self, request: CustomRequest) -> typing.Union[AutoDealerModel, AutoSellerModel,
-                                                                     CarBuyerModel, AnonymousUser, typing.Any]:
+    def profile_getter(self, request: CustomRequest) -> BaseModel:
         user_profile = self.user_model.objects.get(user=request.user)
         return user_profile
 
-    def retrieve(self, request: CustomRequest, id: int | None = None) -> Response:
+    def get(self, request: CustomRequest) -> Response:
         objs_set = self.model.objects.filter(is_active=True,
                                              **{self.user_data: self.profile_getter(request)})
-        if id:
-            obj = get_object_or_404(objs_set, id=id)
-        else:
-            obj = get_object_or_404(objs_set)
+
+        obj = get_object_or_404(objs_set)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
-    def update(self, request: CustomRequest, id: int | None = None) -> Response:
+    def post(self, request: CustomRequest) -> Response:
         objs_set = self.model.objects.filter(is_active=True)
-        if id:
-            obj = get_object_or_404(objs_set, id=id)
-        else:
-            obj = get_object_or_404(objs_set)
+        obj = get_object_or_404(objs_set)
         context = {self.user_data: self.profile_getter(request)}
         serialized_new_obj = self.serializer(data=request.data, instance=obj,
                                              context=context)
@@ -90,26 +96,59 @@ class BaseRUDView(viewsets.ViewSet):
         serialized_new_obj.save()
         return Response(serialized_new_obj.data)
 
-    def destroy(self, request: CustomRequest, id: int | None = None) -> Response:
+    def delete(self, request: CustomRequest) -> Response:
         objs_set = self.model.objects.filter(is_active=True,
                                              **{self.user_data: self.profile_getter(request)})
-        if id:
-            obj = get_object_or_404(objs_set, id=id)
-        else:
-            obj = get_object_or_404(objs_set)
+        obj = get_object_or_404(objs_set)
         obj.is_active = False
         obj.save()
         return Response(status=status.HTTP_200_OK)
 
 
-class BaseProfileRUDView(BaseRUDView):
-    def profile_getter(self, request: CustomRequest) -> typing.Union[AutoSellerModel, AutoDealerModel,
-                                                                     CarBuyerModel, CustomUserModel]:
+class BaseOwnProfileRUDView(BaseOwnModelRUDView):
+    user_model: CustomUserModel = CustomUserModel  # type: ignore[assignment]
+    user_data = 'user'
+
+    def profile_getter(self, request: CustomRequest) -> CustomUserModel:
         user = self.user_model.objects.get(id=request.user.id)
         return user
 
 
-class BaseCRUDView(BaseRUDView):
+class BaseCRUDView(viewsets.ViewSet):
+    model: Type[BaseModel]
+    serializer: Type[serializers.ModelSerializer]
+    user_data: str
+    user_model: Type[BaseModel]
+
+    def profile_getter(self, request: CustomRequest) -> BaseModel:
+        user_profile = self.user_model.objects.get(user=request.user)
+        return user_profile
+
+    def retrieve(self, request: CustomRequest, id: int) -> Response:
+        objs_set = self.model.objects.filter(is_active=True,
+                                             **{self.user_data: self.profile_getter(request)})
+        obj = get_object_or_404(objs_set, id=id)
+        serialized_obj = self.serializer(obj)
+        return Response(serialized_obj.data)
+
+    def update(self, request: CustomRequest, id: int) -> Response:
+        objs_set = self.model.objects.filter(is_active=True)
+        obj = get_object_or_404(objs_set, id=id)
+        context = {self.user_data: self.profile_getter(request)}
+        serialized_new_obj = self.serializer(data=request.data, instance=obj,
+                                             context=context)
+        serialized_new_obj.is_valid(raise_exception=True)
+        serialized_new_obj.save()
+        return Response(serialized_new_obj.data)
+
+    def destroy(self, request: CustomRequest, id: int) -> Response:
+        objs_set = self.model.objects.filter(is_active=True,
+                                             **{self.user_data: self.profile_getter(request)})
+        obj = get_object_or_404(objs_set, id=id)
+        obj.is_active = False
+        obj.save()
+        return Response(status=status.HTTP_200_OK)
+
     def create(self, request: CustomRequest) -> Response:
         context = {self.user_data: self.profile_getter(request)}
         serialized_obj = self.serializer(data=request.data, context=context)
@@ -124,7 +163,8 @@ class BaseCRUDView(BaseRUDView):
         return Response(serialized_objs.data)
 
 
-class BaseProfileCreationView(CreateModelMixin, generics.GenericAPIView):
+class BaseProfileCreationView(CreateModelMixin,
+                              generics.GenericAPIView):
     def perform_create(self, serializer) -> None:
         user = self.request.user
         serializer.save(user_id=user.pk)
@@ -137,7 +177,8 @@ class UserLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request: CustomRequest) -> Response:
-        user = CustomUserModel.objects.get(email=request.data['email'], password=request.data['password'])
+        user = CustomUserModel.objects.get(email=request.data['email'],
+                                           password=request.data['password'])
         login(request, user)
         return Response(status=status.HTTP_200_OK)
 
@@ -148,7 +189,8 @@ class UserLogoutView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class CustomUserCreationView(CreateModelMixin, generics.GenericAPIView):
+class CustomUserCreationView(CreateModelMixin,
+                             generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = CustomUserSerializer
 
@@ -156,29 +198,29 @@ class CustomUserCreationView(CreateModelMixin, generics.GenericAPIView):
         return self.create(request, *args, **kwargs)
 
 
-class UserProfileRUDView(BaseRUDView):
+class SelfUserProfileRUDView(BaseOwnModelRUDView):
     permission_classes = [IsThisUser]
     serializer = CustomUserSerializer
-    model = CustomUserModel
+    model: CustomUserModel = CustomUserModel  # type: ignore[assignment]
     user_data = 'id'
 
-    def profile_getter(self, request: CustomRequest) -> typing.Union[int, str]:
+    def profile_getter(self, request: CustomRequest) -> int:
         id = request.user.id
         return id
 
 
-class AutoDealersForOtherUsersView(BaseForOtherUsersView):
+class AutoDealerReadOnlyView(BaseReadOnlyView):
     serializer = AutoDealerFrontSerializer
     model = AutoDealerModel
 
 
-class AutoSellersForOtherUsersView(BaseForOtherUsersView):
+class AutoSellerReadOnlyView(BaseReadOnlyView):
     permission_classes = [IsSeller & IsVerified | IsDealer & IsVerified]
     serializer = AutoSellerFrontSerializer
     model = AutoSellerModel
 
 
-class CarBuyersForOtherUsersView(BaseForOtherUsersView):
+class CarBuyerReadOnlyView(BaseReadOnlyView):
     permission_classes = [IsDealer & IsVerified]
     serializer = CarBuyersFrontSerializer
     model = CarBuyerModel
@@ -199,36 +241,31 @@ class AutoSellerCreateView(BaseProfileCreationView):
     serializer_class = AutoSellersSerializer
 
 
-class AutoDealerRUDView(BaseProfileRUDView):
+class AutoDealerRUDView(BaseOwnProfileRUDView):
     permission_classes = [IsOwnerOrAdmin]
     serializer = AutoDealerSerializer
     model = AutoDealerModel
-    user_model = CustomUserModel
-    user_data = 'user'
 
 
-class CarBuyerRUDView(BaseProfileRUDView):
+class CarBuyerRUDView(BaseOwnProfileRUDView):
     permission_classes = [IsOwnerOrAdmin]
     serializer = CarBuyersSerializer
     model = CarBuyerModel
-    user_model = CustomUserModel
-    user_data = 'user'
 
 
-class AutoSellerRUDView(BaseProfileRUDView):
+class AutoSellerRUDView(BaseOwnProfileRUDView):
     permission_classes = [IsOwnerOrAdmin]
     serializer = AutoSellersSerializer
     model = AutoSellerModel
-    user_model = CustomUserModel
-    user_data = 'user'
 
 
-class MarketAvailableCarModelsView(BaseForOtherUsersView):
+class MarketAvailableCarModelView(BaseReadOnlyView):
     serializer = MarkerAvailableCarsModelSerializer
     model = MarketAvailableCarModel
 
 
-class DealerSearchCarSpecificationsView(ListModelMixin, generics.GenericAPIView):
+class DealerSearchCarSpecificationView(ListModelMixin,
+                                       generics.GenericAPIView):
     permission_classes = [IsSeller & IsVerified]
     serializer_class = DealerSearchCarSpecificationsSerializer
     queryset = DealerSearchCarSpecificationModel.objects.all()
@@ -237,7 +274,8 @@ class DealerSearchCarSpecificationsView(ListModelMixin, generics.GenericAPIView)
         return self.list(request, *args, **kwargs)
 
 
-class DealerSearchCarsSpecificationsCreateView(CreateModelMixin, generics.GenericAPIView):
+class DealerSearchCarSpecificationCreateView(CreateModelMixin,
+                                             generics.GenericAPIView):
     permission_classes = [IsDealer & IsVerified]
     serializer_class = DealerSearchCarSpecificationsSerializer
 
@@ -250,7 +288,7 @@ class DealerSearchCarsSpecificationsCreateView(CreateModelMixin, generics.Generi
         return self.create(request, *args, **kwargs)
 
 
-class DealerSearchCarsSpecificationRUDView(BaseRUDView):
+class DealerSearchCarSpecificationRUDView(BaseOwnModelRUDView):
     permission_classes = [IsOwnerOrAdmin]
     serializer = DealerSearchCarSpecificationsSerializer
     model = DealerSearchCarSpecificationModel
@@ -258,27 +296,28 @@ class DealerSearchCarsSpecificationRUDView(BaseRUDView):
     user_model = AutoDealerModel
 
 
-class DealerSuitableCarsView(BaseBondedCarsView):
+class DealerSuitableCarView(BaseBondedCarView):
     permission_classes = [IsSeller & IsVerified | IsOwnerOrAdmin & IsVerified]
     serializer = DealerSuitableCarModelsSerializer
     model = DealerSuitableCarModel
     filter_add_data = 'dealer'
 
 
-class DealerAutoParkView(BaseBondedCarsView):
+class DealerAutoParkView(BaseBondedCarView):
     serializer = DealerCarParkSerializer
     model = DealerCarParkModel
     filter_add_data = 'dealer'
 
 
-class SellerAutoParkView(BaseBondedCarsView):
+class SellerAutoParkView(BaseBondedCarView):
     permission_classes = [IsDealer & IsVerified | IsOwnerOrAdmin & IsVerified]
     serializer = SellersCarParkSerializer
     model = SellerCarParkModel
     filter_add_data = 'seller'
 
 
-class SellerSellsHistoryView(ListModelMixin, generics.GenericAPIView):
+class SellerSalesHistoryView(ListModelMixin,
+                             generics.GenericAPIView):
     permission_classes = [IsOwnerOrAdmin & IsVerified | IsDealer & IsVerified]
     queryset = SellerSalesHistoryModel.objects.all()
 
@@ -286,7 +325,8 @@ class SellerSellsHistoryView(ListModelMixin, generics.GenericAPIView):
         return self.list(request, *args, **kwargs)
 
 
-class BuyerPurchaseHistoryView(ListModelMixin, generics.GenericAPIView):
+class BuyerPurchaseHistoryView(ListModelMixin,
+                               generics.GenericAPIView):
     permission_classes = [IsOwnerOrAdmin & IsVerified | IsDealer & IsVerified]
     queryset = CarBuyerHistoryModel.objects.all()
 
@@ -294,7 +334,8 @@ class BuyerPurchaseHistoryView(ListModelMixin, generics.GenericAPIView):
         return self.list(request, *args, **kwargs)
 
 
-class DealerSellsHistoryView(ListModelMixin, generics.GenericAPIView):
+class DealerSalesHistoryView(ListModelMixin,
+                             generics.GenericAPIView):
     permission_classes = [IsOwnerOrAdmin & IsVerified | IsSeller & IsVerified]
     queryset = DealerSalesHistoryModel.objects.all()
 
@@ -302,12 +343,12 @@ class DealerSellsHistoryView(ListModelMixin, generics.GenericAPIView):
         return self.list(request, *args, **kwargs)
 
 
-class DealerPromoForOtherUsersView(BaseForOtherUsersView):
+class DealerPromoReadOnlyView(BaseReadOnlyView):
     serializer = DealersPromoSerializer
     model = DealerPromoModel
 
 
-class SellerPromoForOtherUsersView(BaseForOtherUsersView):
+class SellerPromoReadOnlyView(BaseReadOnlyView):
     serializer = SellersPromoSerializer
     model = SellerPromoModel
 
@@ -328,13 +369,13 @@ class SellerPromoCRUDView(BaseCRUDView):
     user_model = AutoSellerModel
 
 
-class OffersForDealersView(BaseForOtherUsersView):
+class OfferForDealerView(BaseReadOnlyView):
     permission_classes = [IsDealer & IsVerified]
     serializer = OffersSerializer
     model = OfferModel
 
 
-class OffersCRUDView(BaseCRUDView):
+class OfferCRUDView(BaseCRUDView):
     permission_classes = [IsBuyer & IsOwnerOrAdmin & IsVerified]
     serializer = OffersSerializer
     model = OfferModel

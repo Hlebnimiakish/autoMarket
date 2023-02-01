@@ -1,9 +1,12 @@
 from rest_framework import serializers
-
-from user_app.models import CustomUserModel, AutoDealerModel, DealerSearchCarSpecificationModel, \
-    MarketAvailableCarModel, DealerSuitableCarModel, DealerCarParkModel, AutoSellerModel, SellerCarParkModel, \
-    DealerSalesHistoryModel, SellerSalesHistoryModel, CarBuyerModel, CarBuyerHistoryModel, OfferModel, \
-    DealerPromoModel, SellerPromoModel
+from user_app.models import (AutoDealerModel, AutoSellerModel,
+                             CarBuyerHistoryModel, CarBuyerModel,
+                             CustomUserModel, DealerCarParkModel,
+                             DealerPromoModel, DealerSalesHistoryModel,
+                             DealerSearchCarSpecificationModel,
+                             DealerSuitableCarModel, MarketAvailableCarModel,
+                             OfferModel, SellerCarParkModel, SellerPromoModel,
+                             SellerSalesHistoryModel)
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
