@@ -2,11 +2,39 @@
 
 from rest_framework import permissions
 from rest_framework.request import Request
-from user_app.models import CustomUserModel
+from user_app.models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
+                             CustomUserModel,
+                             DealerSearchCarSpecificationModel)
 
 
 class CustomUserRequest(Request):
     user: CustomUserModel
+
+
+class UserHasNoProfile(permissions.BasePermission):
+    message = 'You already have profile'
+
+    def has_permission(self, request: CustomUserRequest, view) -> bool:
+        return not bool(AutoDealerModel.objects.get_or_none(user=request.user) or
+                        AutoSellerModel.objects.get_or_none(user=request.user) or
+                        CarBuyerModel.objects.get_or_none(user=request.user))
+
+
+class IsNewUser(permissions.BasePermission):
+    message = 'You already have user profile'
+
+    def has_permission(self, request: CustomUserRequest, view) -> bool:
+        return not bool(request.user and CustomUserModel.objects.get_or_none(id=request.user.id))
+
+
+class CurrentDealerHasNoSpec(permissions.BasePermission):
+    message = 'You already have a specification'
+
+    def has_permission(self, request: CustomUserRequest, view) -> bool:
+        user = request.user
+        current_dealer = AutoDealerModel.objects.get(user=user)
+        return not \
+            bool(DealerSearchCarSpecificationModel.objects.get_or_none(dealer=current_dealer))
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
