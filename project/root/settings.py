@@ -10,9 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-from pathlib import Path
 import os
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -43,7 +41,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_countries",
 
-    "app",
+    "user_app",
+    "car_parks_app",
+    "cars_app",
+    "offers_app",
+    "promos_app",
+    "sales_history_app",
     "api",
 ]
 
@@ -140,5 +143,4 @@ REST_FRAMEWORK = {
     ]
 }
 
-AUTH_USER_MODEL = "app.CustomUserModel"
-
+AUTH_USER_MODEL = "user_app.CustomUserModel"

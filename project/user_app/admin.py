@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import CustomUserModel, MarketAvailableCarModel, DealerSearchCarSpecificationModel, \
-    SellerCarParkModel, DealerCarParkModel, OfferModel, DealerPromoModel, SellerPromoModel
-from .custom_user_form import CustomUserCreationForm, CustomUserChangeForm
+from .custom_user_form import CustomUserChangeForm, CustomUserCreationForm
+from .models import (CustomUserModel, DealerCarParkModel, DealerPromoModel,
+                     DealerSearchCarSpecificationModel,
+                     MarketAvailableCarModel, OfferModel, SellerCarParkModel,
+                     SellerPromoModel)
 
 
 class AmeUserAdmin(UserAdmin):
@@ -21,7 +23,7 @@ class AmeUserAdmin(UserAdmin):
             'classes': ('wide',),
             'fields': ('email', 'username', 'password1', 'password2', 'is_staff', 'is_active',
                        'user_type', 'is_verified')}
-        ),
+         ),
     )
     search_fields = ('email', 'username')
     ordering = ('email',)
