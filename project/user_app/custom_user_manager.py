@@ -1,9 +1,22 @@
+from contextlib import suppress
+
 from django.contrib.auth.models import BaseUserManager
-from django.db.models import Model, QuerySet
+from django.db.models import Manager, Model, QuerySet
 from django.utils.translation import gettext_lazy as _
 
 
-class CustomUserManager(BaseUserManager):
+class ActiveOnlyManager(Manager):
+    def get_queryset(self) -> QuerySet[Model]:  # type: ignore[override]
+        return super().get_queryset().filter(is_active=True)
+
+    def get_or_none(self, *args, **kwargs) -> Model | None:
+        qs = None
+        with suppress(self.model.DoesNotExist):
+            qs = self.get_queryset().get(*args, **kwargs)
+        return qs
+
+
+class CustomUserManager(BaseUserManager, ActiveOnlyManager):
     def create_user(self, email, username, password=None, **extra_fields):
         if not username:
             raise ValueError(_('You must set a username'))
@@ -30,14 +43,3 @@ class CustomUserManager(BaseUserManager):
                                 **extra_fields)
         user.save()
         return user
-
-    def get_queryset(self) -> QuerySet[Model]:  # type: ignore[override]
-        return super().get_queryset().filter(is_active=True)
-
-    def get_or_none(self, *args, **kwargs) -> Model | None:
-        try:
-            qs = self.get_queryset().get(*args, **kwargs)
-            return qs
-        except self.model.DoesNotExist:
-            qs = None
-            return qs

@@ -3,27 +3,13 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import (BooleanField, CharField, DateField,
                               DateTimeField, DecimalField, EmailField,
-                              FloatField, ForeignKey, IntegerField, Manager,
-                              ManyToManyField, OneToOneField, QuerySet,
-                              TextField)
+                              FloatField, ForeignKey, IntegerField,
+                              ManyToManyField, OneToOneField, TextField)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
-from .custom_user_manager import CustomUserManager
-
-
-class ActiveOnlyManager(Manager):
-    def get_queryset(self) -> QuerySet[models.Model]:  # type: ignore[override]
-        return super().get_queryset().filter(is_active=True)
-
-    def get_or_none(self, *args, **kwargs) -> models.Model | None:
-        try:
-            qs = self.get_queryset().get(*args, **kwargs)
-            return qs
-        except self.model.DoesNotExist:
-            qs = None
-            return qs
+from .custom_user_manager import ActiveOnlyManager, CustomUserManager
 
 
 class CustomUserModel(AbstractBaseUser, PermissionsMixin):
