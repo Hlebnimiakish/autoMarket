@@ -1,4 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
+from django.db.models import Model, QuerySet
 from django.utils.translation import gettext_lazy as _
 
 
@@ -29,3 +30,14 @@ class CustomUserManager(BaseUserManager):
                                 **extra_fields)
         user.save()
         return user
+
+    def get_queryset(self) -> QuerySet[Model]:  # type: ignore[override]
+        return super().get_queryset().filter(is_active=True)
+
+    def get_or_none(self, *args, **kwargs) -> Model | None:
+        try:
+            qs = self.get_queryset().get(*args, **kwargs)
+            return qs
+        except self.model.DoesNotExist:
+            qs = None
+            return qs

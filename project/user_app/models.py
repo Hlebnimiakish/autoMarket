@@ -3,13 +3,27 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import (BooleanField, CharField, DateField,
                               DateTimeField, DecimalField, EmailField,
-                              FloatField, ForeignKey, IntegerField,
-                              ManyToManyField, OneToOneField, TextField)
+                              FloatField, ForeignKey, IntegerField, Manager,
+                              ManyToManyField, OneToOneField, QuerySet,
+                              TextField)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
 from .custom_user_manager import CustomUserManager
+
+
+class ActiveOnlyManager(Manager):
+    def get_queryset(self) -> QuerySet[models.Model]:  # type: ignore[override]
+        return super().get_queryset().filter(is_active=True)
+
+    def get_or_none(self, *args, **kwargs) -> models.Model | None:
+        try:
+            qs = self.get_queryset().get(*args, **kwargs)
+            return qs
+        except self.model.DoesNotExist:
+            qs = None
+            return qs
 
 
 class CustomUserModel(AbstractBaseUser, PermissionsMixin):
@@ -65,6 +79,8 @@ class BaseModel(models.Model):
     is_active: BooleanField = BooleanField(default=True)
     created_at: DateTimeField = DateTimeField(auto_now_add=True)
     updated_at: DateTimeField = DateTimeField(auto_now=True)
+
+    objects = ActiveOnlyManager()
 
     class Meta:
         abstract = True
@@ -167,7 +183,7 @@ class SellerCarParkModel(BaseCurrentCarParkModel):
     pass
 
 
-class BaseSalesHistoryModel(models.Model):
+class BaseSalesHistoryModel(BaseModel):
     date: DateField = DateField(auto_now_add=True)
     buyer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
     selling_price: DecimalField = DecimalField(max_digits=12, decimal_places=2)
@@ -194,13 +210,14 @@ class CarBuyerModel(BaseModel):
     user: OneToOneField = OneToOneField('CustomUserModel', on_delete=models.CASCADE)
 
 
-class CarBuyerHistoryModel(models.Model):
+class CarBuyerHistoryModel(BaseModel):
     bought_car_model: ForeignKey = ForeignKey('MarketAvailableCarModel', on_delete=models.CASCADE)
     auto_dealer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
     bought_quantity: IntegerField = IntegerField()
     car_price: DecimalField = DecimalField(max_digits=12, decimal_places=2)
     deal_sum: DecimalField = DecimalField(max_digits=12, decimal_places=2)
     buyer: ForeignKey = ForeignKey('CarBuyerModel', on_delete=models.CASCADE)
+    date: DateField = DateField(auto_now_add=True)
 
 
 class OfferModel(BaseModel):

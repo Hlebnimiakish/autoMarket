@@ -2,25 +2,16 @@
 
 from typing import Type
 
-from api_permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin, IsSeller,
-                             IsThisUser, IsVerified)
 from django.contrib.auth import login, logout
+from django.db.models import Model
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, serializers, status, viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
-from serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
-                         AutoSellerFrontSerializer, AutoSellersSerializer,
-                         CarBuyersFrontSerializer, CarBuyersSerializer,
-                         CustomUserSerializer, DealerCarParkSerializer,
-                         DealerSearchCarSpecificationsSerializer,
-                         DealersPromoSerializer,
-                         DealerSuitableCarModelsSerializer,
-                         MarkerAvailableCarsModelSerializer, OffersSerializer,
-                         SellersCarParkSerializer, SellersPromoSerializer)
 from user_app.models import (AutoDealerModel, AutoSellerModel, BaseModel,
                              CarBuyerHistoryModel, CarBuyerModel,
                              CustomUserModel, DealerCarParkModel,
@@ -30,6 +21,18 @@ from user_app.models import (AutoDealerModel, AutoSellerModel, BaseModel,
                              OfferModel, SellerCarParkModel, SellerPromoModel,
                              SellerSalesHistoryModel)
 
+from .api_permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin, IsSeller,
+                              IsThisUser, IsVerified)
+from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
+                          AutoSellerFrontSerializer, AutoSellersSerializer,
+                          CarBuyersFrontSerializer, CarBuyersSerializer,
+                          CustomUserSerializer, DealerCarParkSerializer,
+                          DealerSearchCarSpecificationsSerializer,
+                          DealersPromoSerializer,
+                          DealerSuitableCarModelsSerializer,
+                          MarkerAvailableCarsModelSerializer, OffersSerializer,
+                          SellersCarParkSerializer, SellersPromoSerializer)
+
 
 class CustomRequest(Request):
     user: CustomUserModel
@@ -37,69 +40,65 @@ class CustomRequest(Request):
 
 class BaseReadOnlyView(viewsets.ViewSet):
     model: Type[BaseModel]
-    serializer: Type[serializers.ModelSerializer]
+    serializer: Type[ModelSerializer]
 
     def list(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.filter(is_active=True)
+        objs_set = self.model.objects.all()
         serialized_objs = self.serializer(objs_set, many=True)
         return Response(serialized_objs.data)
 
     def retrieve(self, request: CustomRequest, id: int) -> Response:
-        objs_set = self.model.objects.filter(is_active=True)
-        obj = get_object_or_404(objs_set, id=id)
+        obj = get_object_or_404(self.model.objects.all(), id=id)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
 
 class BaseBondedCarView(viewsets.ViewSet):
     model: Type[BaseModel]
-    serializer: Type[serializers.ModelSerializer]
+    serializer: Type[ModelSerializer]
     filter_add_data: str
 
     def list(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.filter(is_active=True)
+        objs_set = self.model.objects.all()
         serialized_objs = self.serializer(objs_set, many=True)
         return Response(serialized_objs.data)
 
     def retrieve(self, request: CustomRequest, id: int) -> Response:
-        all_list_personal = self.model.objects.filter(is_active=True,
-                                                      **{self.filter_add_data: id})
+        all_list_personal = self.model.objects.filter(**{self.filter_add_data: id})
         serialized_list_personal = self.serializer(all_list_personal, many=True)
         return Response(serialized_list_personal.data)
 
 
 class BaseOwnModelRUDView(APIView):
     model: Type[BaseModel]
-    serializer: Type[serializers.ModelSerializer]
+    serializer: Type[ModelSerializer]
     user_data: str
-    user_model: Type[BaseModel]
+    user_model: Type[BaseModel | Model]
 
-    def profile_getter(self, request: CustomRequest) -> BaseModel:
+    def profile_getter(self, request: CustomRequest) -> BaseModel | Model:
         user_profile = self.user_model.objects.get(user=request.user)
         return user_profile
 
     def get(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.filter(is_active=True,
-                                             **{self.user_data: self.profile_getter(request)})
-
-        obj = get_object_or_404(objs_set)
+        obj = get_object_or_404(self.model.objects.all(),
+                                **{self.user_data: self.profile_getter(request)})
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
     def post(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.filter(is_active=True)
-        obj = get_object_or_404(objs_set)
+        obj = get_object_or_404(self.model.objects.all(),
+                                **{self.user_data: self.profile_getter(request)})
         context = {self.user_data: self.profile_getter(request)}
-        serialized_new_obj = self.serializer(data=request.data, instance=obj,
+        serialized_new_obj = self.serializer(data=request.data,
+                                             instance=obj,
                                              context=context)
         serialized_new_obj.is_valid(raise_exception=True)
         serialized_new_obj.save()
         return Response(serialized_new_obj.data)
 
     def delete(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.filter(is_active=True,
-                                             **{self.user_data: self.profile_getter(request)})
-        obj = get_object_or_404(objs_set)
+        obj = get_object_or_404(self.model.objects.all(),
+                                **{self.user_data: self.profile_getter(request)})
         obj.is_active = False
         obj.save()
         return Response(status=status.HTTP_200_OK)
@@ -116,34 +115,33 @@ class BaseOwnProfileRUDView(BaseOwnModelRUDView):
 
 class BaseCRUDView(viewsets.ViewSet):
     model: Type[BaseModel]
-    serializer: Type[serializers.ModelSerializer]
+    serializer: Type[ModelSerializer]
     user_data: str
-    user_model: Type[BaseModel]
+    user_model: Type[BaseModel | Model]
 
-    def profile_getter(self, request: CustomRequest) -> BaseModel:
+    def profile_getter(self, request: CustomRequest) -> BaseModel | Model:
         user_profile = self.user_model.objects.get(user=request.user)
         return user_profile
 
     def retrieve(self, request: CustomRequest, id: int) -> Response:
-        objs_set = self.model.objects.filter(is_active=True,
-                                             **{self.user_data: self.profile_getter(request)})
+        objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
         obj = get_object_or_404(objs_set, id=id)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
     def update(self, request: CustomRequest, id: int) -> Response:
-        objs_set = self.model.objects.filter(is_active=True)
+        objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
         obj = get_object_or_404(objs_set, id=id)
         context = {self.user_data: self.profile_getter(request)}
-        serialized_new_obj = self.serializer(data=request.data, instance=obj,
+        serialized_new_obj = self.serializer(data=request.data,
+                                             instance=obj,
                                              context=context)
         serialized_new_obj.is_valid(raise_exception=True)
         serialized_new_obj.save()
         return Response(serialized_new_obj.data)
 
     def destroy(self, request: CustomRequest, id: int) -> Response:
-        objs_set = self.model.objects.filter(is_active=True,
-                                             **{self.user_data: self.profile_getter(request)})
+        objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
         obj = get_object_or_404(objs_set, id=id)
         obj.is_active = False
         obj.save()
@@ -157,8 +155,7 @@ class BaseCRUDView(viewsets.ViewSet):
         return Response(serialized_obj.data)
 
     def list(self, request: CustomRequest) -> Response:
-        objs = self.model.objects.filter(is_active=True,
-                                         **{self.user_data: self.profile_getter(request)})
+        objs = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
         serialized_objs = self.serializer(objs, many=True)
         return Response(serialized_objs.data)
 
