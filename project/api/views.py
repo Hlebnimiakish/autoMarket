@@ -21,8 +21,9 @@ from user_app.models import (AutoDealerModel, AutoSellerModel, BaseModel,
                              OfferModel, SellerCarParkModel, SellerPromoModel,
                              SellerSalesHistoryModel)
 
-from .api_permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin, IsSeller,
-                              IsThisUser, IsVerified)
+from .api_permissions import (CurrentDealerHasNoSpec, IsBuyer, IsDealer,
+                              IsNewUser, IsOwnerOrAdmin, IsSeller, IsThisUser,
+                              IsVerified, UserHasNoProfile)
 from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
                           AutoSellerFrontSerializer, AutoSellersSerializer,
                           CarBuyersFrontSerializer, CarBuyersSerializer,
@@ -188,7 +189,7 @@ class UserLogoutView(APIView):
 
 class CustomUserCreationView(CreateModelMixin,
                              generics.GenericAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsNewUser]
     serializer_class = CustomUserSerializer
 
     def post(self, request: CustomRequest, *args, **kwargs):
@@ -224,17 +225,17 @@ class CarBuyerReadOnlyView(BaseReadOnlyView):
 
 
 class AutoDealerCreateView(BaseProfileCreationView):
-    permission_classes = [IsDealer & IsVerified]
+    permission_classes = [IsDealer & IsVerified & UserHasNoProfile]
     serializer_class = AutoDealerSerializer
 
 
 class CarBuyerCreateView(BaseProfileCreationView):
-    permission_classes = [IsBuyer & IsVerified]
+    permission_classes = [IsBuyer & IsVerified & UserHasNoProfile]
     serializer_class = CarBuyersSerializer
 
 
 class AutoSellerCreateView(BaseProfileCreationView):
-    permission_classes = [IsSeller & IsVerified]
+    permission_classes = [IsSeller & IsVerified & UserHasNoProfile]
     serializer_class = AutoSellersSerializer
 
 
@@ -273,7 +274,7 @@ class DealerSearchCarSpecificationView(ListModelMixin,
 
 class DealerSearchCarSpecificationCreateView(CreateModelMixin,
                                              generics.GenericAPIView):
-    permission_classes = [IsDealer & IsVerified]
+    permission_classes = [IsDealer & IsVerified & CurrentDealerHasNoSpec]
     serializer_class = DealerSearchCarSpecificationsSerializer
 
     def perform_create(self, serializer) -> None:
