@@ -42,12 +42,12 @@ INSTALLED_APPS = [
     "django_countries",
 
     "user_app",
-    "car_parks_app",
-    "cars_app",
-    "offers_app",
-    "promos_app",
+    "car_park_app",
+    "car_market_app",
+    "offer_app",
+    "promo_app",
     "sales_history_app",
-    "api",
+    "car_spec_app",
 ]
 
 MIDDLEWARE = [

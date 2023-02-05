@@ -1,10 +1,10 @@
 # mypy: disable-error-code=override
 
+from car_spec_app.models import DealerSearchCarSpecificationModel
 from rest_framework import permissions
 from rest_framework.request import Request
 from user_app.models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
-                             CustomUserModel,
-                             DealerSearchCarSpecificationModel)
+                             CustomUserModel)
 
 
 class CustomUserRequest(Request):
