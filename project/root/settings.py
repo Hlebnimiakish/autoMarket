@@ -41,13 +41,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_countries",
 
-    "user_app",
-    "car_parks_app",
-    "cars_app",
-    "offers_app",
-    "promos_app",
-    "sales_history_app",
-    "api",
+    "user",
+    "car_park",
+    "car_market",
+    "offer",
+    "promo",
+    "sales_history",
+    "car_spec",
 ]
 
 MIDDLEWARE = [
@@ -143,4 +143,4 @@ REST_FRAMEWORK = {
     ]
 }
 
-AUTH_USER_MODEL = "user_app.CustomUserModel"
+AUTH_USER_MODEL = "user.CustomUserModel"

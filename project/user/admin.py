@@ -2,13 +2,10 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .custom_user_form import CustomUserChangeForm, CustomUserCreationForm
-from .models import (CustomUserModel, DealerCarParkModel, DealerPromoModel,
-                     DealerSearchCarSpecificationModel,
-                     MarketAvailableCarModel, OfferModel, SellerCarParkModel,
-                     SellerPromoModel)
+from .models import CustomUserModel
 
 
-class AmeUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUserModel
@@ -29,18 +26,4 @@ class AmeUserAdmin(UserAdmin):
     ordering = ('email',)
 
 
-admin.site.register(CustomUserModel, AmeUserAdmin)
-
-admin.site.register(MarketAvailableCarModel)
-
-admin.site.register(DealerSearchCarSpecificationModel)
-
-admin.site.register(DealerCarParkModel)
-
-admin.site.register(SellerCarParkModel)
-
-admin.site.register(OfferModel)
-
-admin.site.register(DealerPromoModel)
-
-admin.site.register(SellerPromoModel)
+admin.site.register(CustomUserModel, CustomUserAdmin)
