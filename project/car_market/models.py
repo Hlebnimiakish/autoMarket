@@ -3,7 +3,7 @@ from django.db.models import (BooleanField, CharField, DecimalField,
 from root.common.models import BaseModel
 
 
-class BaseAutoSpecificationModel(BaseModel):
+class BaseCarParametersModel(BaseModel):
     TRANSMISSION_CHOICES = [
                             ("MANUAL", "Manual"),
                             ("AUTO", "Auto"),
@@ -51,7 +51,7 @@ class BaseAutoSpecificationModel(BaseModel):
         abstract = True
 
 
-class MarketAvailableCarModel(BaseAutoSpecificationModel):
+class MarketAvailableCarModel(BaseCarParametersModel):
     brand_name: CharField = CharField(max_length=100)
     car_model_name: CharField = CharField(max_length=100)
     year_of_production: IntegerField = IntegerField()

@@ -1,4 +1,4 @@
-from car_spec_app.views import BaseBondedCarView
+from car_spec.views import BaseBondedCarView
 from models import DealerCarParkModel, SellerCarParkModel
 from root.common.permissions import IsDealer, IsOwnerOrAdmin, IsVerified
 from serializers import DealerCarParkSerializer, SellersCarParkSerializer

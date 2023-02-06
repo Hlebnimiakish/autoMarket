@@ -5,7 +5,7 @@ from root.common.models import BaseModel
 
 
 class BaseCurrentCarParkModel(BaseModel):
-    car_model_id: ForeignKey = ForeignKey('car_market_app.MarketAvailableCarModel',
+    car_model_id: ForeignKey = ForeignKey('car_market.MarketAvailableCarModel',
                                           on_delete=models.CASCADE)
     available_number: IntegerField = IntegerField()
     car_price: DecimalField = DecimalField(max_digits=12, decimal_places=2)
@@ -15,9 +15,9 @@ class BaseCurrentCarParkModel(BaseModel):
 
 
 class DealerCarParkModel(BaseCurrentCarParkModel):
-    dealer: OneToOneField = OneToOneField('user_app.AutoDealerModel', on_delete=models.CASCADE)
+    dealer: OneToOneField = OneToOneField('user.AutoDealerModel', on_delete=models.CASCADE)
 
 
 class SellerCarParkModel(BaseCurrentCarParkModel):
-    seller: OneToOneField = OneToOneField('user_app.AutoSellerModel', on_delete=models.CASCADE)
+    seller: OneToOneField = OneToOneField('user.AutoSellerModel', on_delete=models.CASCADE)
     pass

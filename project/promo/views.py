@@ -3,7 +3,7 @@ from root.common.permissions import (IsDealer, IsOwnerOrAdmin, IsSeller,
                                      IsVerified)
 from root.common.views import BaseCRUDView, BaseReadOnlyView
 from serializers import DealersPromoSerializer, SellersPromoSerializer
-from user_app.models import AutoDealerModel, AutoSellerModel
+from user.models import AutoDealerModel, AutoSellerModel
 
 
 class DealerPromoReadOnlyView(BaseReadOnlyView):

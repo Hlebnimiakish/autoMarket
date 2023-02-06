@@ -8,7 +8,7 @@ from root.common.models import BaseModel
 from root.common.permissions import (CurrentDealerHasNoSpec, IsDealer,
                                      IsOwnerOrAdmin, IsSeller, IsVerified)
 from root.common.views import BaseOwnModelRUDView, CustomRequest
-from user_app.models import AutoDealerModel
+from user.models import AutoDealerModel
 
 from .models import DealerSearchCarSpecificationModel, DealerSuitableCarModel
 from .serializers import (DealerSearchCarSpecificationsSerializer,

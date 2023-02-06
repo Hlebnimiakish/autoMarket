@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
-from user_app.models import BaseModel, CustomUserModel
+from user.models import BaseModel, CustomUserModel
 
 
 class CustomRequest(Request):
