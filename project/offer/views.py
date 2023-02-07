@@ -1,9 +1,10 @@
-from models import OfferModel
 from root.common.permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin,
                                      IsVerified)
 from root.common.views import BaseCRUDView, BaseReadOnlyView
-from serializers import OffersSerializer
 from user.models import CarBuyerModel
+
+from .models import OfferModel
+from .serializers import OffersSerializer
 
 
 class OfferForDealerView(BaseReadOnlyView):

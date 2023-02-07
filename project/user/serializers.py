@@ -1,6 +1,7 @@
-from models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
-                    CustomUserModel)
 from rest_framework.serializers import ModelSerializer
+
+from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
+                     CustomUserModel)
 
 
 class CustomUserSerializer(ModelSerializer):

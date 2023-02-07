@@ -1,5 +1,6 @@
-from models import MarketAvailableCarModel
 from rest_framework.serializers import ModelSerializer
+
+from .models import MarketAvailableCarModel
 
 
 class MarkerAvailableCarsModelSerializer(ModelSerializer):

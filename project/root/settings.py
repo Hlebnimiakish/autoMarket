@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "django_countries",
+    "drf_yasg",
 
     "user",
     "car_park",
@@ -140,7 +141,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
 }
 
 AUTH_USER_MODEL = "user.CustomUserModel"

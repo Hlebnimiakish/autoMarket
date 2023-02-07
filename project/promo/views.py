@@ -1,9 +1,10 @@
-from models import DealerPromoModel, SellerPromoModel
 from root.common.permissions import (IsDealer, IsOwnerOrAdmin, IsSeller,
                                      IsVerified)
 from root.common.views import BaseCRUDView, BaseReadOnlyView
-from serializers import DealersPromoSerializer, SellersPromoSerializer
 from user.models import AutoDealerModel, AutoSellerModel
+
+from .models import DealerPromoModel, SellerPromoModel
+from .serializers import DealersPromoSerializer, SellersPromoSerializer
 
 
 class DealerPromoReadOnlyView(BaseReadOnlyView):

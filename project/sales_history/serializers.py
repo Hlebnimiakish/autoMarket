@@ -1,6 +1,7 @@
-from models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
-                    SellerSalesHistoryModel)
 from rest_framework.serializers import ModelSerializer
+
+from .models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
+                     SellerSalesHistoryModel)
 
 
 class DealerSalesHistorySerializer(ModelSerializer):

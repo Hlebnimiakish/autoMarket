@@ -1,5 +1,6 @@
-from models import DealerCarParkModel, SellerCarParkModel
 from rest_framework.serializers import ModelSerializer
+
+from .models import DealerCarParkModel, SellerCarParkModel
 
 
 class DealerCarParkSerializer(ModelSerializer):
