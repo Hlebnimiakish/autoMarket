@@ -45,7 +45,7 @@ class BaseOwnModelRUDView(APIView):
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
-    def post(self, request: CustomRequest) -> Response:
+    def put(self, request: CustomRequest) -> Response:
         obj = get_object_or_404(self.model.objects.all(),
                                 **{self.user_data: self.profile_getter(request)})
         context = {self.user_data: self.profile_getter(request)}

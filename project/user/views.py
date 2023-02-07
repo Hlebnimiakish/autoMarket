@@ -42,7 +42,7 @@ class BaseProfileCreationView(CreateModelMixin,
 class UserLoginView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request: CustomRequest) -> Response:
+    def put(self, request: CustomRequest) -> Response:
         user = CustomUserModel.objects.get(email=request.data['email'],
                                            password=request.data['password'])
         login(request, user)
