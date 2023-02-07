@@ -19,6 +19,8 @@ pre-commit = "*"
 django-stubs = {extras = ["compatible-mypy"], version = "*"}
 djangorestframework-stubs = {extras = ["compatible-mypy"], version = "*"}
 isort = {extras = ["pipfile_deprecated_finder"], version = "*"}
+django-rest-swagger = "*"
+drf-yasg = "*"
 
 [requires]
 python_version = "3.10"

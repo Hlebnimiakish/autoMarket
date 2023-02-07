@@ -1,5 +1,6 @@
-from models import OfferModel
 from rest_framework.serializers import ModelSerializer
+
+from .models import OfferModel
 
 
 class OffersSerializer(ModelSerializer):

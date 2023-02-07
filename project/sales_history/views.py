@@ -1,13 +1,14 @@
-from models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
-                    SellerSalesHistoryModel)
 from rest_framework import generics
 from rest_framework.mixins import ListModelMixin
 from root.common.permissions import (IsDealer, IsOwnerOrAdmin, IsSeller,
                                      IsVerified)
 from root.common.views import CustomRequest
-from serializers import (CarBuyersHistorySerializer,
-                         DealerSalesHistorySerializer,
-                         SellerSalesHistorySerializer)
+
+from .models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
+                     SellerSalesHistoryModel)
+from .serializers import (CarBuyersHistorySerializer,
+                          DealerSalesHistorySerializer,
+                          SellerSalesHistorySerializer)
 
 
 class SellerSalesHistoryView(ListModelMixin,

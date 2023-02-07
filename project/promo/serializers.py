@@ -1,5 +1,6 @@
-from models import DealerPromoModel, SellerPromoModel
 from rest_framework.serializers import ModelSerializer
+
+from .models import DealerPromoModel, SellerPromoModel
 
 
 class DealersPromoSerializer(ModelSerializer):

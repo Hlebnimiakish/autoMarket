@@ -1,8 +1,6 @@
 # mypy: disable-error-code=override
 
 from django.contrib.auth import login, logout
-from models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
-                    CustomUserModel)
 from rest_framework import generics, status
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import AllowAny
@@ -13,10 +11,13 @@ from root.common.permissions import (IsBuyer, IsDealer, IsNewUser,
                                      IsVerified, UserHasNoProfile)
 from root.common.views import (BaseOwnModelRUDView, BaseReadOnlyView,
                                CustomRequest)
-from serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
-                         AutoSellerFrontSerializer, AutoSellerSerializer,
-                         CarBuyerFrontSerializer, CarBuyerSerializer,
-                         CustomUserSerializer)
+
+from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
+                     CustomUserModel)
+from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
+                          AutoSellerFrontSerializer, AutoSellerSerializer,
+                          CarBuyerFrontSerializer, CarBuyerSerializer,
+                          CustomUserSerializer)
 
 
 class BaseOwnProfileRUDView(BaseOwnModelRUDView):

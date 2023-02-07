@@ -63,6 +63,14 @@ class BaseOwnModelRUDView(APIView):
         obj.save()
         return Response(status=status.HTTP_200_OK)
 
+    def get_serializer(self):
+        """
+        Return the serializer instance that should be used for validating and
+        deserializing input, and for serializing output.
+        """
+        serializer = self.serializer
+        return serializer()
+
 
 class BaseCRUDView(viewsets.ViewSet):
     model: Type[BaseModel]
@@ -109,3 +117,11 @@ class BaseCRUDView(viewsets.ViewSet):
         objs = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
         serialized_objs = self.serializer(objs, many=True)
         return Response(serialized_objs.data)
+
+    def get_serializer(self):
+        """
+        Return the serializer instance that should be used for validating and
+        deserializing input, and for serializing output.
+        """
+        serializer = self.serializer
+        return serializer()
