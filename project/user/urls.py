@@ -1,12 +1,13 @@
 from django.urls import include, path
 from rest_framework import routers
+from rest_framework_simplejwt.views import (TokenObtainPairView,
+                                            TokenRefreshView)
 
 from .views import (AutoDealerCreateView, AutoDealerReadOnlyView,
                     AutoDealerRUDView, AutoSellerCreateView,
                     AutoSellerReadOnlyView, AutoSellerRUDView,
                     CarBuyerCreateView, CarBuyerReadOnlyView, CarBuyerRUDView,
-                    CustomUserCreationView, SelfUserProfileRUDView,
-                    UserLoginView, UserLogoutView)
+                    CustomUserCreationView, SelfUserProfileRUDView)
 
 profile_RO_router = routers.DefaultRouter()
 profile_RO_router.register(r'dealers', AutoDealerReadOnlyView, basename='dealer')
@@ -21,11 +22,11 @@ urlpatterns = [
          SelfUserProfileRUDView.as_view(),
          name='user'),
     path('login/',
-         UserLoginView.as_view(),
-         name='login'),
-    path('logout/',
-         UserLogoutView.as_view(),
-         name='logout'),
+         TokenObtainPairView.as_view(),
+         name='get-token'),
+    path('login/refresh_token',
+         TokenRefreshView.as_view(),
+         name='refresh-token'),
     path('create_dealer_profile/',
          AutoDealerCreateView.as_view(),
          name='dealer-creation'),

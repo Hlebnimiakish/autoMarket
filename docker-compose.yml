@@ -16,7 +16,7 @@ services:
   ame_app:
     build:
       dockerfile: ./Dockerfile
-    container_name: auto_market_emu
+    container_name: auto_market
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000

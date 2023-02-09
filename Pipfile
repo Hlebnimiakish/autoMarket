@@ -8,6 +8,7 @@ django = "*"
 djangorestframework = "*"
 django-countries = "*"
 psycopg2-binary = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 pylint = "*"

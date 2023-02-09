@@ -1,11 +1,10 @@
 # mypy: disable-error-code=override
 
-from django.contrib.auth import login, logout
-from rest_framework import generics, status
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from rest_framework import generics
 from rest_framework.mixins import CreateModelMixin
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from root.common.permissions import (IsBuyer, IsDealer, IsNewUser,
                                      IsOwnerOrAdmin, IsSeller, IsThisUser,
                                      IsVerified, UserHasNoProfile)
@@ -39,28 +38,19 @@ class BaseProfileCreationView(CreateModelMixin,
         return self.create(request, *args, **kwargs)
 
 
-class UserLoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def put(self, request: CustomRequest) -> Response:
-        user = CustomUserModel.objects.get(email=request.data['email'],
-                                           password=request.data['password'])
-        login(request, user)
-        return Response(status=status.HTTP_200_OK)
-
-
-class UserLogoutView(APIView):
-    def get(self, request: CustomRequest) -> Response:
-        logout(request)
-        return Response(status=status.HTTP_200_OK)
-
-
 class CustomUserCreationView(CreateModelMixin,
                              generics.GenericAPIView):
     permission_classes = [IsNewUser]
     serializer_class = CustomUserSerializer
 
     def post(self, request: CustomRequest, *args, **kwargs):
+        password = str(request.data.get('password'))
+        try:
+            validate_password(password=password)
+        except ValidationError as ve:
+            password_errors = dict()
+            password_errors['password'] = ve
+            return Response(data=password_errors)
         return self.create(request, *args, **kwargs)
 
 
