@@ -23,8 +23,8 @@ class BaseReadOnlyView(viewsets.ViewSet):
         serialized_objs = self.serializer(objs_set, many=True)
         return Response(serialized_objs.data)
 
-    def retrieve(self, request: CustomRequest, id: int) -> Response:
-        obj = get_object_or_404(self.model.objects.all(), id=id)
+    def retrieve(self, request: CustomRequest, pk: int) -> Response:
+        obj = get_object_or_404(self.model.objects.all(), id=pk)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
