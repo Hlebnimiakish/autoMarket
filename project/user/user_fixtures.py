@@ -3,12 +3,17 @@ from random import randint
 
 import pytest
 from rest_framework.test import RequestsClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
-pytestmark = pytest.mark.django_db
+from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
+                     CustomUserModel)
+from .serializers import (AutoDealerSerializer, AutoSellerSerializer,
+                          CarBuyerSerializer, CustomUserRUDSerializer)
 
-req = RequestsClient()
 
-BASE_URL = 'http://testserver/users/'
+@pytest.fixture(scope='session', name='client', autouse=True)
+def get_request_client():
+    return RequestsClient()
 
 
 @pytest.fixture(scope='function')
@@ -34,19 +39,17 @@ def unverified_user(request):
         "email": f"test{filler}@am.com",
         "user_type": str(request.param)
     }
-    create_user_response = req.post(f'{BASE_URL}registration/',
-                                    json=user_data)
-    key = req.post(f'{BASE_URL}login/',
-                   json=user_data).json()['access']
+    user = CustomUserModel.objects.create_user(**user_data)
+    created_user = CustomUserRUDSerializer(user).data
+    tokens = RefreshToken.for_user(user)
     headers = {
-        'Authorization': f'Bearer {str(key)}'
+        'Authorization': f'Bearer {str(tokens.access_token)}'
     }
-    yield {'created_user': create_user_response.json(),
+    yield {'created_user': created_user,
            'creation_data': user_data,
            'headers': headers}
 
-    req.delete(f'{BASE_URL}my_user_page/',
-               headers=headers)
+    user.delete()
 
 
 @pytest.fixture(scope='function')
@@ -57,91 +60,90 @@ def verified_user(request):
         "username": f"test{filler}",
         "password": f"pass{password}",
         "email": f"test{filler}@am.com",
-        "user_type": str(request.param)
+        "user_type": str(request.param),
+        "is_verified": True
     }
-    create_user_response = req.post(f'{BASE_URL}registration/',
-                                    json=user_data)
-    key = req.post(f'{BASE_URL}login/',
-                   json=user_data).json()['access']
+    user = CustomUserModel.objects.create_user(**user_data)
+    created_user = CustomUserRUDSerializer(user).data
+    tokens = RefreshToken.for_user(user)
     headers = {
-        'Authorization': f'Bearer {str(key)}'
+        'Authorization': f'Bearer {str(tokens.access_token)}'
     }
-    id_data = {'user_id': create_user_response.json()['id']}
-    verify_response = req.put(f'{BASE_URL}verification/', json=id_data)
-    yield {'created_user': verify_response.json(),
+    yield {'created_user': created_user,
            'creation_data': user_data,
            'headers': headers}
 
-    req.delete(f'{BASE_URL}my_user_page/',
-               headers=headers)
+    user.delete()
 
 
-@pytest.fixture(scope='package', name='all_users', autouse=True)
-def create_all_user_types_with_profiles(django_db_setup, django_db_blocker):
-    del django_db_setup
-    with django_db_blocker.unblock():
-        created_users = {}
-        for user_type in ['DEALER', 'SELLER', 'BUYER']:
-            password = uuid.uuid4().hex
-            filler = uuid.uuid4().hex
-            user_data = {
-                "username": f"test{filler}",
-                "password": f"pass{password}",
-                "email": f"test{filler}@am.com",
-                "user_type": user_type
-            }
-            create_user_response = req.post(f'{BASE_URL}registration/',
-                                            json=user_data)
-            key = req.post(f'{BASE_URL}login/',
-                           json=user_data).json()['access']
-            headers = {
-                'Authorization': f'Bearer {str(key)}'
-            }
-            id_data = {'user_id': create_user_response.json()['id']}
-            req.put(f'{BASE_URL}verification/', json=id_data)
-            created_users[str.lower(user_type)] = {
-                'created_user_data': create_user_response.json(),
-                'headers': headers,
-                'creation_data': user_data
-            }
-        yield created_users
-
-        for user in created_users.values():
-            req.delete(f'{BASE_URL}my_user_page/',
-                       headers=user['headers'])
-
-
-@pytest.fixture(scope='package', name='all_profiles', autouse=True)
-def create_all_users_profiles(all_users, django_db_setup, django_db_blocker):
-    del django_db_setup
-    with django_db_blocker.unblock():
-        dealer_profile_data = {
-            "name": f"tdealer{uuid.uuid4().hex}",
-            "home_country": "AL"
+@pytest.fixture(scope='function', name='all_users')
+def create_all_user_types_with_profiles():
+    created_users = {}
+    for user_type in ['DEALER', 'SELLER', 'BUYER']:
+        password = uuid.uuid4().hex
+        filler = uuid.uuid4().hex
+        user_data = {
+            "username": f"test{filler}",
+            "password": f"pass{password}",
+            "email": f"test{filler}@am.com",
+            "user_type": user_type,
+            "is_verified": True
         }
-        seller_profile_data = {
-            "name": f"tseller{uuid.uuid4().hex}",
-            "year_of_creation": randint(1000, 2023)
+        user = CustomUserModel.objects.create_user(**user_data)
+        created_user = CustomUserRUDSerializer(user).data
+        tokens = RefreshToken.for_user(user)
+        headers = {
+            'Authorization': f'Bearer {str(tokens.access_token)}'
         }
-        buyer_profile_data = {
-            "firstname": f"tbuyer{uuid.uuid4().hex}",
-            "lastname": f"tbuyer{uuid.uuid4().hex}",
-            "drivers_license_number": str(uuid.uuid4().hex)
+        created_users[str.lower(user_type)] = {
+            'created_user_data': created_user,
+            'headers': headers,
+            'user_instance': user
         }
-        profiles = {'dealer': dealer_profile_data,
-                    'seller': seller_profile_data,
-                    'buyer': buyer_profile_data}
-        all_profiles = {}
-        for user_type in all_users.keys():
-            create_profile = req.post(f'{BASE_URL}create_{user_type}_profile/',
-                                      json=profiles[f'{user_type}'],
-                                      headers=all_users[f'{user_type}']['headers'])
-            all_profiles[user_type] = create_profile.json()
-        yield all_profiles
+    yield created_users
 
-        for user_type, user in all_users.items():
-            req.delete(f'{BASE_URL}my_{user_type}_profile/',
-                       headers=user['headers'])
+    for user in created_users.values():
+        user['user_instance'].delete()
+
+
+@pytest.fixture(scope='function', name='all_profiles')
+def create_all_users_profiles(all_users):
+    dealer_profile_data = {
+        "name": f"tdealer{uuid.uuid4().hex}",
+        "home_country": "AL"
+    }
+    seller_profile_data = {
+        "name": f"tseller{uuid.uuid4().hex}",
+        "year_of_creation": randint(1000, 2023)
+    }
+    buyer_profile_data = {
+        "firstname": f"tbuyer{uuid.uuid4().hex}",
+        "lastname": f"tbuyer{uuid.uuid4().hex}",
+        "drivers_license_number": str(uuid.uuid4().hex)
+    }
+    profiles = {'dealer': dealer_profile_data,
+                'seller': seller_profile_data,
+                'buyer': buyer_profile_data}
+    models = {'dealer': AutoDealerModel,
+              'seller': AutoSellerModel,
+              'buyer': CarBuyerModel}
+    serializers = {'dealer': AutoDealerSerializer,
+                   'seller': AutoSellerSerializer,
+                   'buyer': CarBuyerSerializer}
+    all_profiles = {}
+    profiles_list = []
+    for user_type in all_users.keys():
+        model = models[f'{user_type}']
+        user = all_users[f'{user_type}']['user_instance']
+        profile = model.objects.create(user=user,
+                                       **profiles[f'{user_type}'])
+        profile_data = serializers[f'{user_type}'](profile).data
+        all_profiles[user_type] = profile_data
+        profiles_list.append(profile)
+    yield all_profiles
+
+    for p in profiles_list:
+        p.delete()
 
 
 @pytest.fixture(scope='function', name='dealer_profile')
