@@ -68,8 +68,7 @@ class BaseOwnModelRUDView(APIView):
         Return the serializer instance that should be used for validating and
         deserializing input, and for serializing output.
         """
-        serializer = self.serializer
-        return serializer()
+        return self.serializer()
 
 
 class BaseCRUDView(viewsets.ViewSet):
@@ -123,5 +122,4 @@ class BaseCRUDView(viewsets.ViewSet):
         Return the serializer instance that should be used for validating and
         deserializing input, and for serializing output.
         """
-        serializer = self.serializer
-        return serializer()
+        return self.serializer()

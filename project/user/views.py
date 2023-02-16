@@ -17,7 +17,7 @@ from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
 from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
                           AutoSellerFrontSerializer, AutoSellerSerializer,
                           CarBuyerFrontSerializer, CarBuyerSerializer,
-                          CustomUserSerializer)
+                          CustomUserRUDSerializer, CustomUserSerializer)
 
 
 class BaseOwnProfileRUDView(BaseOwnModelRUDView):
@@ -63,8 +63,7 @@ class CustomUserCreationView(APIView):
         Return the serializer instance that should be used for validating and
         deserializing input, and for serializing output.
         """
-        serializer = self.serializer
-        return serializer()
+        return self.serializer()
 
 
 class UserVerificationView(APIView):
@@ -83,7 +82,7 @@ class UserVerificationView(APIView):
 
 class SelfUserProfileRUDView(BaseOwnModelRUDView):
     permission_classes = [IsThisUser]
-    serializer = CustomUserSerializer
+    serializer = CustomUserRUDSerializer
     model: CustomUserModel = CustomUserModel  # type: ignore[assignment]
     user_data = 'id'
 
