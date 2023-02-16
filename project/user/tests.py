@@ -178,7 +178,6 @@ def test_dealer_can_view_other_users(all_users):
         view_users = req.get(f'{BASE_URL}{user_type}s/',
                              headers=dealer['headers'])
         assert view_users.status_code == 200
-        print(view_users.json())
         assert view_users.json()[0]['id']
         view_user = req.get(f'{BASE_URL}{user_type}s/1/',
                             headers=dealer['headers'])
