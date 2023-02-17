@@ -14,8 +14,7 @@ pytestmark = pytest.mark.django_db
                          indirect=True)
 def test_create_users_with_different_types(user_data, client):
     response = client.post(f'{reverse("registration")}',
-                           data=user_data,
-                           format='json')
+                           data=user_data)
     assert response.status_code == 201
     assert response.data['username'] == user_data['username']
     assert response.data['user_type'] == user_data['user_type']
@@ -25,18 +24,15 @@ def test_create_users_with_different_types(user_data, client):
                          ['DEALER', 'SELLER', 'BUYER'],
                          indirect=True)
 def test_user_can_read_update_delete_his_user_profile(unverified_user, client):
-    response = client.get(f'{reverse("user")}',
-                          format='json')
+    response = client.get(f'{reverse("user")}')
     assert response.status_code == 200
     assert response.data['username'] == unverified_user['created_user_data']['username']
     unverified_user['created_user_data']['username'] = f'PreDelete{uuid.uuid4().hex}'
     response = client.put(f'{reverse("user")}',
-                          data=unverified_user['created_user_data'],
-                          format='json')
+                          data=unverified_user['created_user_data'])
     assert response.status_code == 200
     assert response.data['username'] == unverified_user['created_user_data']['username']
-    response = client.delete(f'{reverse("user")}',
-                             format='json')
+    response = client.delete(f'{reverse("user")}')
     assert response.status_code == 200
 
 
@@ -44,16 +40,14 @@ def test_user_can_read_update_delete_his_user_profile(unverified_user, client):
                          [choice(['DEALER', 'SELLER', 'BUYER'])],
                          indirect=True)
 def test_created_user_can_log_in_and_refresh(user_data, client):
-    client.post(f'{reverse("registration")}', data=user_data, format='json')
+    client.post(f'{reverse("registration")}', data=user_data, )
     response = client.post(f'{reverse("get-token")}',
-                           data=user_data,
-                           format='json')
+                           data=user_data)
     refresh = response.data['refresh']
     assert response.status_code == 200
     assert response.data['access']
     response = client.post(f'{reverse("refresh-token")}',
-                           data={'refresh': refresh},
-                           format='json')
+                           data={'refresh': refresh})
     assert response.status_code == 200
     assert response.data['access']
 
@@ -63,11 +57,10 @@ def test_created_user_can_log_in_and_refresh(user_data, client):
                          indirect=True)
 def test_inactive_user_can_not_login_and_refresh(user_data, client):
     user_data['is_active'] = False
-    client.post(f'{reverse("registration")}', data=user_data, format='json')
+    client.post(f'{reverse("registration")}', data=user_data)
     user_data['is_active'] = True
     response = client.post(f'{reverse("get-token")}',
-                           data=user_data,
-                           format='json')
+                           data=user_data)
     assert response.status_code == 401
 
 
@@ -77,8 +70,7 @@ def test_inactive_user_can_not_login_and_refresh(user_data, client):
 def test_user_can_be_verified(unverified_user, client):
     id_data = {'user_id': unverified_user['created_user_data']['id']}
     response = client.put(f'{reverse("verification")}',
-                          data=id_data,
-                          format='json')
+                          data=id_data)
     assert response.status_code == 200
     assert response.data['is_verified']
 
@@ -86,16 +78,14 @@ def test_user_can_be_verified(unverified_user, client):
 @pytest.mark.parametrize('unverified_user', ['DEALER'], indirect=True)
 def test_unverified_users_can_not_create_profile(unverified_user, dealer_profile, client):
     response = client.post(f'{reverse("dealer-creation")}',
-                           data=dealer_profile,
-                           format='json')
+                           data=dealer_profile)
     assert response.status_code == 403
 
 
 @pytest.mark.parametrize('verified_user', ['DEALER'], indirect=True)
 def test_verified_users_can_create_profile(verified_user, dealer_profile, client):
     response = client.post(f'{reverse("dealer-creation")}',
-                           data=dealer_profile,
-                           format='json')
+                           data=dealer_profile)
     assert response.status_code == 201
 
 
@@ -112,8 +102,7 @@ def test_users_with_different_types_can_create_only_corresponding_profile(verifi
                                'buyer': buyer_profile}.items():
         url_name = f'{user_type}-creation'
         response = client.post(f'{reverse(url_name)}',
-                               data=profile,
-                               format='json')
+                               data=profile)
         if user_type == str.lower(verified_user['created_user_data']['user_type']):
             assert response.status_code == 201
             url_name = f'{user_type}-profile'
@@ -133,8 +122,7 @@ def test_dealer_seller_can_read_update_delete_his_type_profile(verified_user,
     profile_data = request.getfixturevalue(f'{user_type}_profile')
     url_name = f'{user_type}-creation'
     client.post(f'{reverse(url_name)}',
-                data=profile_data,
-                format='json')
+                data=profile_data)
     url_name = f'{user_type}-profile'
     response = client.get(f'{reverse(url_name)}')
     assert response.status_code == 200
@@ -142,8 +130,7 @@ def test_dealer_seller_can_read_update_delete_his_type_profile(verified_user,
     profile_data = response.data
     profile_data['name'] = f'PreDelete{uuid.uuid4()}'
     response = client.put(f'{reverse(url_name)}',
-                          data=profile_data,
-                          format='json')
+                          data=profile_data)
     assert response.status_code == 200
     assert profile_data['name'] == response.data['name']
     response = client.delete(f'{reverse(url_name)}')
@@ -159,16 +146,14 @@ def test_buyer_can_read_update_delete_his_type_profile(verified_user,
     user_type = str.lower(verified_user['created_user_data']['user_type'])
     user_profile = request.getfixturevalue(f'{user_type}_profile')
     client.post(f'{reverse("buyer-creation")}',
-                data=user_profile,
-                format='json')
+                data=user_profile)
     response = client.get(f'{reverse("buyer-profile")}')
     assert response.status_code == 200
     assert response.data['is_active']
     profile_data = response.data
     profile_data['firstname'] = f'PreDelete{uuid.uuid4()}'
     response = client.put(f'{reverse("buyer-profile")}',
-                          data=profile_data,
-                          format='json')
+                          data=profile_data)
     assert response.status_code == 200
     assert profile_data['firstname'] == response.data['firstname']
     response = client.delete(f'{reverse("buyer-profile")}')
@@ -244,8 +229,7 @@ def test_seller_can_view_other_users(all_users, all_profiles, client):
 def test_user_creation_invalid_data(user_data, client):
     user_data['user_type'] = 'ABRA_ABRA_CADABRA'
     response = client.post(f'{reverse("registration")}',
-                           data=user_data,
-                           format='json')
+                           data=user_data)
     assert response.status_code == 400
 
 
@@ -255,8 +239,7 @@ def test_user_creation_invalid_data(user_data, client):
 def test_profile_creation_invalid_data(verified_user, dealer_profile, client):
     dealer_profile['home_country'] = 'ABRA_ABRA_CADABRA'
     response = client.post(f'{reverse("dealer-creation")}',
-                           data=dealer_profile,
-                           format='json')
+                           data=dealer_profile)
     assert response.status_code == 400
 
 
@@ -265,10 +248,8 @@ def test_profile_creation_invalid_data(verified_user, dealer_profile, client):
                          indirect=True)
 def test_login_with_invalid_user_data(user_data, client):
     client.post(f'{reverse("registration")}',
-                data=user_data,
-                format='json')
+                data=user_data)
     user_data['email'] = 'ABRA_ABRA_CADABRA'
     response = client.post(f'{reverse("get-token")}',
-                           data=user_data,
-                           format='json')
+                           data=user_data)
     assert response.status_code == 401
