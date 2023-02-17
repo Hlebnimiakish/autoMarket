@@ -11,7 +11,7 @@ from .serializers import (AutoDealerSerializer, AutoSellerSerializer,
 
 
 @pytest.fixture(scope='session', name='client', autouse=True)
-def get_request_client():
+def get_client():
     return APIClient()
 
 
