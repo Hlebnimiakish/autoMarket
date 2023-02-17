@@ -69,7 +69,6 @@ class CustomUserCreationView(APIView):
 class UserVerificationView(APIView):
     # This View probably will be changed in future
     # (when definite verification method will be picked)
-    permission_classes = [IsNewUser]
 
     def put(self, request):
         user_id = request.data['user_id']

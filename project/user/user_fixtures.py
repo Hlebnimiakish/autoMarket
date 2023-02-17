@@ -2,8 +2,7 @@ import uuid
 from random import randint
 
 import pytest
-from rest_framework.test import RequestsClient
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.test import APIClient
 
 from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
                      CustomUserModel)
@@ -13,7 +12,7 @@ from .serializers import (AutoDealerSerializer, AutoSellerSerializer,
 
 @pytest.fixture(scope='session', name='client', autouse=True)
 def get_request_client():
-    return RequestsClient()
+    return APIClient()
 
 
 @pytest.fixture(scope='function')
@@ -30,7 +29,7 @@ def user_data(request):
 
 
 @pytest.fixture(scope='function')
-def unverified_user(request):
+def unverified_user(request, client):
     password = uuid.uuid4().hex
     filler = uuid.uuid4().hex
     user_data = {
@@ -41,19 +40,15 @@ def unverified_user(request):
     }
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
-    tokens = RefreshToken.for_user(user)
-    headers = {
-        'Authorization': f'Bearer {str(tokens.access_token)}'
-    }
-    yield {'created_user': created_user,
-           'creation_data': user_data,
-           'headers': headers}
+    client.force_authenticate(user=user)
+    yield {'created_user_data': created_user,
+           'user_instance': user}
 
     user.delete()
 
 
 @pytest.fixture(scope='function')
-def verified_user(request):
+def verified_user(request, client):
     password = uuid.uuid4().hex
     filler = uuid.uuid4().hex
     user_data = {
@@ -65,19 +60,15 @@ def verified_user(request):
     }
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
-    tokens = RefreshToken.for_user(user)
-    headers = {
-        'Authorization': f'Bearer {str(tokens.access_token)}'
-    }
-    yield {'created_user': created_user,
-           'creation_data': user_data,
-           'headers': headers}
+    client.force_authenticate(user=user)
+    yield {'created_user_data': created_user,
+           'user_instance': user}
 
     user.delete()
 
 
 @pytest.fixture(scope='function', name='all_users')
-def create_all_user_types_with_profiles():
+def create_all_user_types():
     created_users = {}
     for user_type in ['DEALER', 'SELLER', 'BUYER']:
         password = uuid.uuid4().hex
@@ -91,13 +82,8 @@ def create_all_user_types_with_profiles():
         }
         user = CustomUserModel.objects.create_user(**user_data)
         created_user = CustomUserRUDSerializer(user).data
-        tokens = RefreshToken.for_user(user)
-        headers = {
-            'Authorization': f'Bearer {str(tokens.access_token)}'
-        }
         created_users[str.lower(user_type)] = {
             'created_user_data': created_user,
-            'headers': headers,
             'user_instance': user
         }
     yield created_users
