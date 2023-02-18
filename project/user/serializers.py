@@ -7,9 +7,16 @@ from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
 class CustomUserSerializer(ModelSerializer):
     class Meta:
         model = CustomUserModel
-        fields = ['id', 'email', 'password', 'username', 'user_type', 'is_verified']
+        fields = ['id', 'email', 'password', 'username', 'user_type', 'is_verified', 'is_active']
         read_only_fields = ['is_verified']
         extra_kwargs = {'password': {'write_only': True}}
+
+
+class CustomUserRUDSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUserModel
+        fields = ['id', 'email', 'username', 'user_type', 'is_verified', 'is_active']
+        read_only_fields = ['id', 'user_type', 'is_verified']
 
 
 class AutoDealerSerializer(ModelSerializer):

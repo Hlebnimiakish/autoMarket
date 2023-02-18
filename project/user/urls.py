@@ -7,7 +7,8 @@ from .views import (AutoDealerCreateView, AutoDealerReadOnlyView,
                     AutoDealerRUDView, AutoSellerCreateView,
                     AutoSellerReadOnlyView, AutoSellerRUDView,
                     CarBuyerCreateView, CarBuyerReadOnlyView, CarBuyerRUDView,
-                    CustomUserCreationView, SelfUserProfileRUDView)
+                    CustomUserCreationView, SelfUserProfileRUDView,
+                    UserVerificationView)
 
 profile_RO_router = routers.DefaultRouter()
 profile_RO_router.register(r'dealers', AutoDealerReadOnlyView, basename='dealer')
@@ -24,9 +25,12 @@ urlpatterns = [
     path('login/',
          TokenObtainPairView.as_view(),
          name='get-token'),
-    path('login/refresh_token',
+    path('login/refresh_token/',
          TokenRefreshView.as_view(),
          name='refresh-token'),
+    path('verification/',
+         UserVerificationView.as_view(),
+         name='verification'),
     path('create_dealer_profile/',
          AutoDealerCreateView.as_view(),
          name='dealer-creation'),

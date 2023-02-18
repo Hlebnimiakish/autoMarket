@@ -3,3 +3,4 @@
 .pre-commit-config.yaml
 mypy.ini
 .flake8
+pytest.ini

@@ -101,11 +101,7 @@ class IsVerified(permissions.BasePermission):
     message = "You have to be verified to perform this action."
 
     def has_permission(self, request: CustomUserRequest, view) -> bool:
-        if request.user.is_verified:
-            return True
-        return False
+        return bool(request.user.is_verified)
 
     def has_object_permission(self, request: CustomUserRequest, view, obj) -> bool:
-        if request.user.is_verified:
-            return True
-        return False
+        return bool(request.user.is_verified)
