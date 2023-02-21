@@ -3,10 +3,16 @@ from rest_framework import routers
 
 from .views import (DealerSearchCarSpecificationCreateView,
                     DealerSearchCarSpecificationRUDView,
-                    DealerSearchCarSpecificationView, DealerSuitableCarView)
+                    DealerSearchCarSpecificationView,
+                    DealerSuitableCarFrontView, DealerSuitableCarOwnView)
 
 car_spec_router = routers.DefaultRouter()
-car_spec_router.register(r'suitable_cars', DealerSuitableCarView, basename='suitable-car')
+car_spec_router.register(r'suitable_cars',
+                         DealerSuitableCarFrontView,
+                         basename='suitable-car')
+car_spec_router.register(r'my_suitable_cars',
+                         DealerSuitableCarOwnView,
+                         basename='my-suitable-car')
 
 urlpatterns = [
     path('my_car_specification/',
