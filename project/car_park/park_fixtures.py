@@ -25,7 +25,4 @@ def create_car_parks(cars, all_profiles):
         park = owner['model'].objects.create(**park_data)
         parks[f'{owner_type}_park'] = park
 
-    yield parks
-
-    for park in parks.values():
-        park.delete()
+    return parks

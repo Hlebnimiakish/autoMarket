@@ -6,7 +6,7 @@ from .models import MarketAvailableCarModel
 
 
 @pytest.fixture(scope='function', name='cars')
-def create_ten_cars():
+def create_cars():
     cars = []
     for _ in range(10):
         car_data = {
@@ -31,7 +31,4 @@ def create_ten_cars():
         }
         created_car = MarketAvailableCarModel.objects.create(**car_data)
         cars.append(created_car)
-    yield cars
-
-    for car in cars:
-        car.delete()
+    return cars

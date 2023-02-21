@@ -41,10 +41,8 @@ def unverified_user(request, client):
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
     client.force_authenticate(user=user)
-    yield {'created_user_data': created_user,
-           'user_instance': user}
-
-    user.delete()
+    return {'created_user_data': created_user,
+            'user_instance': user}
 
 
 @pytest.fixture(scope='function')
@@ -61,10 +59,8 @@ def verified_user(request, client):
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
     client.force_authenticate(user=user)
-    yield {'created_user_data': created_user,
-           'user_instance': user}
-
-    user.delete()
+    return {'created_user_data': created_user,
+            'user_instance': user}
 
 
 @pytest.fixture(scope='function', name='all_users')
@@ -86,10 +82,7 @@ def create_all_user_types():
             'created_user_data': created_user,
             'user_instance': user
         }
-    yield created_users
-
-    for user in created_users.values():
-        user['user_instance'].delete()
+    return created_users
 
 
 @pytest.fixture(scope='function', name='all_profiles')
@@ -124,10 +117,7 @@ def create_all_users_profiles(all_users):
             "profile_data": serializers[str(user_type)](profile).data,
             "profile_instance": profile
         }
-    yield all_profiles
-
-    for p in all_profiles.values():
-        p["profile_instance"].delete()
+    return all_profiles
 
 
 @pytest.fixture(scope='function', name='dealer_profile')
