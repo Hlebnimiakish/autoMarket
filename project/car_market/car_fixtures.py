@@ -3,13 +3,12 @@ from random import choice, randint
 import pytest
 
 from .models import MarketAvailableCarModel
-from .serializers import MarkerAvailableCarsModelSerializer
 
 
 @pytest.fixture(scope='function', name='cars')
 def create_ten_cars():
-    cars = {}
-    for car in range(10):
+    cars = []
+    for _ in range(10):
         car_data = {
             "brand_name": choice(['Mesla', 'PulseWagen', 'Meely', 'Konda',
                                   'Pissan', 'Laudi', 'Koyota', 'Peat']),
@@ -31,12 +30,8 @@ def create_ten_cars():
             'demand_level': randint(0, 100)
         }
         created_car = MarketAvailableCarModel.objects.create(**car_data)
-        created_car_data = MarkerAvailableCarsModelSerializer(created_car).data
-        cars[car+1] = {
-            'car_instance': created_car,
-            'car_data': created_car_data
-        }
+        cars.append(created_car)
     yield cars
 
-    for car in cars.values():
-        car['car_instance'].delete()
+    for car in cars:
+        car.delete()

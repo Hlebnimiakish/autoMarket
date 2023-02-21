@@ -77,7 +77,7 @@ def create_all_user_types():
             "username": f"test{filler}",
             "password": f"pass{password}",
             "email": f"test{filler}@am.com",
-            "user_type": user_type,
+            "user_type": str(user_type),
             "is_verified": True
         }
         user = CustomUserModel.objects.create_user(**user_data)
@@ -118,10 +118,10 @@ def create_all_users_profiles(all_users):
                    'buyer': CarBuyerSerializer}
     all_profiles = {}
     for user_type in all_users.keys():
-        profiles[f'{user_type}']['user'] = all_users[f'{user_type}']['user_instance']
-        profile = models[f'{user_type}'].objects.create(**profiles[f'{user_type}'])
+        profiles[str(user_type)]['user'] = all_users[str(user_type)]['user_instance']
+        profile = models[str(user_type)].objects.create(**profiles[str(user_type)])
         all_profiles[user_type] = {
-            "profile_data": serializers[f'{user_type}'](profile).data,
+            "profile_data": serializers[str(user_type)](profile).data,
             "profile_instance": profile
         }
     yield all_profiles

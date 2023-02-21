@@ -17,7 +17,7 @@ def test_users_can_view_dealer_auto_park(car_parks, all_users, client):
 
 
 def test_dealer_can_view_sellers_auto_park(car_parks, client):
-    user = car_parks['dealer']['park_instance'].dealer.user
+    user = car_parks['dealer_park'].dealer.user
     client.force_authenticate(user=user)
     response = client.get(reverse('seller-park-list'))
     assert response.status_code == 200
@@ -47,7 +47,7 @@ def test_seller_can_not_view_other_sellers_auto_park(verified_user, car_parks, c
 
 
 def test_seller_can_view_his_own_auto_park(car_parks, client):
-    user = car_parks['seller']['park_instance'].seller.user
+    user = car_parks['seller_park'].seller.user
     client.force_authenticate(user=user)
     response = client.get(reverse('my-seller-park-list'))
     assert response.status_code == 200
@@ -59,7 +59,7 @@ def test_seller_can_view_his_own_auto_park(car_parks, client):
 
 
 def test_dealer_can_view_his_own_auto_park(car_parks, client):
-    user = car_parks['dealer']['park_instance'].dealer.user
+    user = car_parks['dealer_park'].dealer.user
     client.force_authenticate(user=user)
     response = client.get(reverse('my-dealer-park-list'))
     assert response.status_code == 200

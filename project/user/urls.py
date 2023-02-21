@@ -11,9 +11,9 @@ from .views import (AutoDealerCreateView, AutoDealerReadOnlyView,
                     UserVerificationView)
 
 profile_RO_router = routers.DefaultRouter()
-profile_RO_router.register(r'dealers', AutoDealerReadOnlyView, basename='dealer')
-profile_RO_router.register(r'sellers', AutoSellerReadOnlyView, basename='seller')
-profile_RO_router.register(r'buyers', CarBuyerReadOnlyView, basename='buyer')
+profile_RO_router.register('dealers', AutoDealerReadOnlyView, basename='dealer')
+profile_RO_router.register('sellers', AutoSellerReadOnlyView, basename='seller')
+profile_RO_router.register('buyers', CarBuyerReadOnlyView, basename='buyer')
 
 urlpatterns = [
     path('registration/',
