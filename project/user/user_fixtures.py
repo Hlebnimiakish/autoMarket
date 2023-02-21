@@ -117,19 +117,17 @@ def create_all_users_profiles(all_users):
                    'seller': AutoSellerSerializer,
                    'buyer': CarBuyerSerializer}
     all_profiles = {}
-    profiles_list = []
     for user_type in all_users.keys():
-        model = models[f'{user_type}']
-        user = all_users[f'{user_type}']['user_instance']
-        profile = model.objects.create(user=user,
-                                       **profiles[f'{user_type}'])
-        profile_data = serializers[f'{user_type}'](profile).data
-        all_profiles[user_type] = profile_data
-        profiles_list.append(profile)
+        profiles[f'{user_type}']['user'] = all_users[f'{user_type}']['user_instance']
+        profile = models[f'{user_type}'].objects.create(**profiles[f'{user_type}'])
+        all_profiles[user_type] = {
+            "profile_data": serializers[f'{user_type}'](profile).data,
+            "profile_instance": profile
+        }
     yield all_profiles
 
-    for p in profiles_list:
-        p.delete()
+    for p in all_profiles.values():
+        p["profile_instance"].delete()
 
 
 @pytest.fixture(scope='function', name='dealer_profile')
