@@ -1,34 +1,15 @@
-from typing import Type
-
-from rest_framework import generics, viewsets
+from car_park.views import BaseOwnBondedCarView
+from rest_framework import generics
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
-from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
-from root.common.models import BaseModel
 from root.common.permissions import (CurrentDealerHasNoSpec, IsDealer,
                                      IsOwnerOrAdmin, IsSeller, IsVerified)
-from root.common.views import BaseOwnModelRUDView, CustomRequest
+from root.common.views import (BaseOwnModelRUDView, BaseReadOnlyView,
+                               CustomRequest)
 from user.models import AutoDealerModel
 
 from .models import DealerSearchCarSpecificationModel, DealerSuitableCarModel
 from .serializers import (DealerSearchCarSpecificationsSerializer,
                           DealerSuitableCarModelsSerializer)
-
-
-class BaseBondedCarView(viewsets.ViewSet):
-    model: Type[BaseModel]
-    serializer: Type[ModelSerializer]
-    filter_add_data: str
-
-    def list(self, request: CustomRequest) -> Response:
-        objs_set = self.model.objects.all()
-        serialized_objs = self.serializer(objs_set, many=True)
-        return Response(serialized_objs.data)
-
-    def retrieve(self, request: CustomRequest, id: int) -> Response:
-        all_list_personal = self.model.objects.filter(**{self.filter_add_data: id})
-        serialized_list_personal = self.serializer(all_list_personal, many=True)
-        return Response(serialized_list_personal.data)
 
 
 class DealerSearchCarSpecificationView(ListModelMixin,
@@ -63,8 +44,15 @@ class DealerSearchCarSpecificationRUDView(BaseOwnModelRUDView):
     user_model = AutoDealerModel
 
 
-class DealerSuitableCarView(BaseBondedCarView):
-    permission_classes = [IsSeller & IsVerified | IsOwnerOrAdmin & IsVerified]
+class DealerSuitableCarFrontView(BaseReadOnlyView):
+    permission_classes = [IsSeller & IsVerified]
     serializer = DealerSuitableCarModelsSerializer
     model = DealerSuitableCarModel
-    filter_add_data = 'dealer'
+
+
+class DealerSuitableCarOwnView(BaseOwnBondedCarView):
+    permission_classes = [IsSeller & IsVerified & IsOwnerOrAdmin]
+    serializer = DealerSuitableCarModelsSerializer
+    model = DealerSuitableCarModel
+    user_type = 'dealer'
+    user_model = AutoDealerModel

@@ -41,10 +41,8 @@ def unverified_user(request, client):
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
     client.force_authenticate(user=user)
-    yield {'created_user_data': created_user,
-           'user_instance': user}
-
-    user.delete()
+    return {'created_user_data': created_user,
+            'user_instance': user}
 
 
 @pytest.fixture(scope='function')
@@ -61,10 +59,8 @@ def verified_user(request, client):
     user = CustomUserModel.objects.create_user(**user_data)
     created_user = CustomUserRUDSerializer(user).data
     client.force_authenticate(user=user)
-    yield {'created_user_data': created_user,
-           'user_instance': user}
-
-    user.delete()
+    return {'created_user_data': created_user,
+            'user_instance': user}
 
 
 @pytest.fixture(scope='function', name='all_users')
@@ -77,7 +73,7 @@ def create_all_user_types():
             "username": f"test{filler}",
             "password": f"pass{password}",
             "email": f"test{filler}@am.com",
-            "user_type": user_type,
+            "user_type": str(user_type),
             "is_verified": True
         }
         user = CustomUserModel.objects.create_user(**user_data)
@@ -86,10 +82,7 @@ def create_all_user_types():
             'created_user_data': created_user,
             'user_instance': user
         }
-    yield created_users
-
-    for user in created_users.values():
-        user['user_instance'].delete()
+    return created_users
 
 
 @pytest.fixture(scope='function', name='all_profiles')
@@ -117,19 +110,14 @@ def create_all_users_profiles(all_users):
                    'seller': AutoSellerSerializer,
                    'buyer': CarBuyerSerializer}
     all_profiles = {}
-    profiles_list = []
     for user_type in all_users.keys():
-        model = models[f'{user_type}']
-        user = all_users[f'{user_type}']['user_instance']
-        profile = model.objects.create(user=user,
-                                       **profiles[f'{user_type}'])
-        profile_data = serializers[f'{user_type}'](profile).data
-        all_profiles[user_type] = profile_data
-        profiles_list.append(profile)
-    yield all_profiles
-
-    for p in profiles_list:
-        p.delete()
+        profiles[str(user_type)]['user'] = all_users[str(user_type)]['user_instance']
+        profile = models[str(user_type)].objects.create(**profiles[str(user_type)])
+        all_profiles[user_type] = {
+            "profile_data": serializers[str(user_type)](profile).data,
+            "profile_instance": profile
+        }
+    return all_profiles
 
 
 @pytest.fixture(scope='function', name='dealer_profile')

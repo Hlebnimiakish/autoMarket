@@ -4,8 +4,6 @@ from random import choice
 import pytest
 from django.urls import reverse
 
-BASE_URL = 'http://testserver'
-
 pytestmark = pytest.mark.django_db
 
 
@@ -40,7 +38,7 @@ def test_user_can_read_update_delete_his_user_profile(unverified_user, client):
                          [choice(['DEALER', 'SELLER', 'BUYER'])],
                          indirect=True)
 def test_created_user_can_log_in_and_refresh(user_data, client):
-    client.post(reverse("registration"), data=user_data, )
+    client.post(reverse("registration"), data=user_data)
     response = client.post(reverse("get-token"),
                            data=user_data)
     refresh = response.data['refresh']
