@@ -51,7 +51,7 @@ class DealerSuitableCarFrontView(BaseReadOnlyView):
 
 
 class DealerSuitableCarOwnView(BaseOwnBondedCarView):
-    permission_classes = [IsSeller & IsVerified & IsOwnerOrAdmin]
+    permission_classes = [IsDealer & IsVerified & IsOwnerOrAdmin]
     serializer = DealerSuitableCarModelsSerializer
     model = DealerSuitableCarModel
     user_type = 'dealer'

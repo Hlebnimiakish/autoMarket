@@ -48,10 +48,8 @@ class BaseOwnModelRUDView(APIView):
     def put(self, request: CustomRequest) -> Response:
         obj = get_object_or_404(self.model.objects.all(),
                                 **{self.user_data: self.profile_getter(request)})
-        context = {self.user_data: self.profile_getter(request)}
         serialized_new_obj = self.serializer(data=request.data,
-                                             instance=obj,
-                                             context=context)
+                                             instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
         serialized_new_obj.save()
         return Response(serialized_new_obj.data)
@@ -81,36 +79,34 @@ class BaseCRUDView(viewsets.ViewSet):
         user_profile = self.user_model.objects.get(user=request.user)
         return user_profile
 
-    def retrieve(self, request: CustomRequest, id: int) -> Response:
+    def retrieve(self, request: CustomRequest, pk: int) -> Response:
         objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
-        obj = get_object_or_404(objs_set, id=id)
+        obj = get_object_or_404(objs_set, id=pk)
         serialized_obj = self.serializer(obj)
         return Response(serialized_obj.data)
 
-    def update(self, request: CustomRequest, id: int) -> Response:
+    def update(self, request: CustomRequest, pk: int) -> Response:
         objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
-        obj = get_object_or_404(objs_set, id=id)
-        context = {self.user_data: self.profile_getter(request)}
+        obj = get_object_or_404(objs_set, id=pk)
         serialized_new_obj = self.serializer(data=request.data,
-                                             instance=obj,
-                                             context=context)
+                                             instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
         serialized_new_obj.save()
         return Response(serialized_new_obj.data)
 
-    def destroy(self, request: CustomRequest, id: int) -> Response:
+    def destroy(self, request: CustomRequest, pk: int) -> Response:
         objs_set = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
-        obj = get_object_or_404(objs_set, id=id)
+        obj = get_object_or_404(objs_set, id=pk)
         obj.is_active = False
         obj.save()
         return Response(status=status.HTTP_200_OK)
 
     def create(self, request: CustomRequest) -> Response:
-        context = {self.user_data: self.profile_getter(request)}
-        serialized_obj = self.serializer(data=request.data, context=context)
+        user_data = {self.user_data: self.profile_getter(request)}
+        serialized_obj = self.serializer(data=request.data)
         serialized_obj.is_valid(raise_exception=True)
-        serialized_obj.save()
-        return Response(serialized_obj.data)
+        serialized_obj.save(**user_data)
+        return Response(serialized_obj.data, status=status.HTTP_201_CREATED)
 
     def list(self, request: CustomRequest) -> Response:
         objs = self.model.objects.filter(**{self.user_data: self.profile_getter(request)})
