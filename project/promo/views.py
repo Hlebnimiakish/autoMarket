@@ -13,6 +13,7 @@ class DealerPromoReadOnlyView(BaseReadOnlyView):
 
 
 class SellerPromoReadOnlyView(BaseReadOnlyView):
+    permission_classes = [IsSeller & IsVerified | IsDealer & IsVerified]
     serializer = SellersPromoSerializer
     model = SellerPromoModel
 

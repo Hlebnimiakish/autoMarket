@@ -1,8 +1,7 @@
-from rest_framework import generics
-from rest_framework.mixins import ListModelMixin
-from root.common.permissions import (IsDealer, IsOwnerOrAdmin, IsSeller,
-                                     IsVerified)
-from root.common.views import CustomRequest
+from root.common.permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin,
+                                     IsSeller, IsVerified)
+from root.common.views import BaseOwnModelReadView
+from user.models import AutoDealerModel, AutoSellerModel, CarBuyerModel
 
 from .models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
                      SellerSalesHistoryModel)
@@ -11,31 +10,25 @@ from .serializers import (CarBuyersHistorySerializer,
                           SellerSalesHistorySerializer)
 
 
-class SellerSalesHistoryView(ListModelMixin,
-                             generics.GenericAPIView):
-    permission_classes = [IsOwnerOrAdmin & IsVerified | IsDealer & IsVerified]
-    queryset = SellerSalesHistoryModel.objects.all()
-    serializer_class = SellerSalesHistorySerializer
-
-    def get(self, request: CustomRequest, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+class SellerSalesHistoryOwnView(BaseOwnModelReadView):
+    permission_classes = [IsVerified & IsSeller & IsOwnerOrAdmin]
+    model = SellerSalesHistoryModel
+    serializer = SellerSalesHistorySerializer
+    user_model = AutoSellerModel
+    user_type = 'seller'
 
 
-class BuyerPurchaseHistoryView(ListModelMixin,
-                               generics.GenericAPIView):
-    permission_classes = [IsOwnerOrAdmin & IsVerified | IsDealer & IsVerified]
-    queryset = CarBuyerHistoryModel.objects.all()
-    serializer_class = CarBuyersHistorySerializer
-
-    def get(self, request: CustomRequest, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+class DealerSalesHistoryOwnView(BaseOwnModelReadView):
+    permission_classes = [IsVerified & IsDealer & IsOwnerOrAdmin]
+    model = DealerSalesHistoryModel
+    serializer = DealerSalesHistorySerializer
+    user_model = AutoDealerModel
+    user_type = 'dealer'
 
 
-class DealerSalesHistoryView(ListModelMixin,
-                             generics.GenericAPIView):
-    permission_classes = [IsOwnerOrAdmin & IsVerified | IsSeller & IsVerified]
-    queryset = DealerSalesHistoryModel.objects.all()
-    serializer_class = DealerSalesHistorySerializer
-
-    def get(self, request: CustomRequest, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+class BuyerPurchaseHistoryOwnView(BaseOwnModelReadView):
+    permission_classes = [IsVerified & IsBuyer & IsOwnerOrAdmin]
+    model = CarBuyerHistoryModel
+    serializer = CarBuyersHistorySerializer
+    user_model = CarBuyerModel
+    user_type = 'buyer'
