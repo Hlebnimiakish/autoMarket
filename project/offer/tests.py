@@ -59,6 +59,9 @@ def test_buyer_can_create_read_update_delete_his_offer(all_profiles,
     response = client.delete(reverse('my-offer-detail',
                                      kwargs={"pk": id}))
     assert response.status_code == 200
+    response = client.get(reverse('my-offer-detail',
+                                  kwargs={"pk": id}))
+    assert response.status_code == 404
 
 
 def test_other_users_can_not_create_read_update_delete_offer(all_profiles,

@@ -1,10 +1,9 @@
-from car_park.views import BaseOwnBondedCarView
 from rest_framework import generics
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from root.common.permissions import (CurrentDealerHasNoSpec, IsDealer,
                                      IsOwnerOrAdmin, IsSeller, IsVerified)
-from root.common.views import (BaseOwnModelRUDView, BaseReadOnlyView,
-                               CustomRequest)
+from root.common.views import (BaseOwnModelReadView, BaseOwnModelRUDView,
+                               BaseReadOnlyView, CustomRequest)
 from user.models import AutoDealerModel
 
 from .models import DealerSearchCarSpecificationModel, DealerSuitableCarModel
@@ -50,7 +49,7 @@ class DealerSuitableCarFrontView(BaseReadOnlyView):
     model = DealerSuitableCarModel
 
 
-class DealerSuitableCarOwnView(BaseOwnBondedCarView):
+class DealerSuitableCarOwnReadView(BaseOwnModelReadView):
     permission_classes = [IsDealer & IsVerified & IsOwnerOrAdmin]
     serializer = DealerSuitableCarModelsSerializer
     model = DealerSuitableCarModel
