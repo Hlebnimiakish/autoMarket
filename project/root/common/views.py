@@ -69,6 +69,30 @@ class BaseOwnModelRUDView(APIView):
         return self.serializer()
 
 
+class BaseOwnModelReadView(viewsets.ViewSet):
+    model: Type[BaseModel]
+    serializer: Type[ModelSerializer]
+    user_type: str
+    user_model: Type[BaseModel | Model]
+
+    def profile_getter(self, request: CustomRequest) -> BaseModel | Model:
+        user_profile = self.user_model.objects.get(user=request.user)
+        return user_profile
+
+    def list(self, request: CustomRequest) -> Response:
+        profile = self.profile_getter(request)
+        objs_set = self.model.objects.filter(**{self.user_type: profile})
+        serialized_objs = self.serializer(objs_set, many=True)
+        return Response(serialized_objs.data)
+
+    def retrieve(self, request: CustomRequest, pk: int) -> Response:
+        profile = self.profile_getter(request)
+        objs_set = self.model.objects.filter(**{self.user_type: profile})
+        obj = get_object_or_404(objs_set, id=pk)
+        serialized_obj = self.serializer(obj)
+        return Response(serialized_obj.data)
+
+
 class BaseCRUDView(viewsets.ViewSet):
     model: Type[BaseModel]
     serializer: Type[ModelSerializer]
