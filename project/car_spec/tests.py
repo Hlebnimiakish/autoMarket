@@ -5,7 +5,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.parametrize('verified_user', ['DEALER'], indirect=True)
-def test_dealer_can_create_a_spec(verified_user, spec_data, client, dealer_profile):
+def test_dealer_can_create_spec(verified_user, spec_data, client, dealer_profile):
     response = client.post(reverse("dealer-creation"),
                            data=dealer_profile)
     spec_data['dealer'] = response.data
@@ -15,7 +15,7 @@ def test_dealer_can_create_a_spec(verified_user, spec_data, client, dealer_profi
     assert response.data['min_year_of_production']
 
 
-def test_other_users_can_not_create_a_spec(all_profiles, spec_data, client):
+def test_other_users_can_not_create_spec(all_profiles, spec_data, client):
     for profile in [all_profiles['seller']['profile_instance'],
                     all_profiles['buyer']['profile_instance']]:
         client.force_authenticate(user=profile.user)

@@ -27,7 +27,7 @@ def create_spec_data():
 
 
 @pytest.fixture(scope='function', name='spec')
-def create_a_spec(all_profiles, spec_data):
+def create_spec(all_profiles, spec_data):
     dealer = all_profiles['dealer']['profile_instance']
     spec_data['dealer'] = dealer
     created_spec = DealerSearchCarSpecificationModel.objects.create(**spec_data)
