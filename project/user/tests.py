@@ -32,6 +32,8 @@ def test_user_can_read_update_delete_his_user_profile(unverified_user, client):
     assert response.data['username'] == unverified_user['created_user_data']['username']
     response = client.delete(reverse("user"))
     assert response.status_code == 200
+    response = client.get(reverse("user"))
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize('user_data',
@@ -129,6 +131,8 @@ def test_dealer_seller_can_read_update_delete_his_type_profile(verified_user,
     assert profile_data['name'] == response.data['name']
     response = client.delete(reverse(f'{user_type}-profile'))
     assert response.status_code == 200
+    response = client.get(reverse(f'{user_type}-profile'))
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize('verified_user',
@@ -152,6 +156,8 @@ def test_buyer_can_read_update_delete_his_type_profile(verified_user,
     assert profile_data['firstname'] == response.data['firstname']
     response = client.delete(reverse("buyer-profile"))
     assert response.status_code == 200
+    response = client.get(reverse('buyer-profile'))
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db

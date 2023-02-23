@@ -63,6 +63,8 @@ def test_dealer_can_read_update_delete_his_spec(spec, client):
     assert response.data['color'] == 'green'
     response = client.delete(reverse('my-spec'))
     assert response.status_code == 200
+    response = client.get(reverse('my-spec'))
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize('verified_user', ['SELLER'], indirect=True)
