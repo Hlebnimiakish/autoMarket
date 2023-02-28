@@ -9,6 +9,7 @@ djangorestframework = "*"
 django-countries = "*"
 psycopg2-binary = "*"
 djangorestframework-simplejwt = "*"
+django-filter = "*"
 
 [dev-packages]
 pylint = "*"

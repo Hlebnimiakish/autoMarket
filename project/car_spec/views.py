@@ -9,6 +9,7 @@ from user.models import AutoDealerModel
 from .models import DealerSearchCarSpecificationModel, DealerSuitableCarModel
 from .serializers import (DealerSearchCarSpecificationsSerializer,
                           DealerSuitableCarModelsSerializer)
+from .spec_filter import SuitableCarFrontFilter, SuitableCarOwnFilter
 
 
 class DealerSearchCarSpecificationView(ListModelMixin,
@@ -47,6 +48,7 @@ class DealerSuitableCarFrontView(BaseReadOnlyView):
     permission_classes = [IsSeller & IsVerified]
     serializer = DealerSuitableCarModelsSerializer
     model = DealerSuitableCarModel
+    filterset_class = SuitableCarFrontFilter
 
 
 class DealerSuitableCarOwnReadView(BaseOwnModelReadView):
@@ -55,3 +57,4 @@ class DealerSuitableCarOwnReadView(BaseOwnModelReadView):
     model = DealerSuitableCarModel
     user_type = 'dealer'
     user_model = AutoDealerModel
+    filterset_class = SuitableCarOwnFilter
