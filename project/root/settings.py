@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_countries",
     "drf_yasg",
     'rest_framework_simplejwt',
+    'django_filters',
 
     "user",
     "car_park",
@@ -148,6 +149,9 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
 }
 
 AUTH_USER_MODEL = "user.CustomUserModel"
