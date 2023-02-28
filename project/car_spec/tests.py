@@ -97,3 +97,32 @@ def test_buyer_can_not_view_dealer_suitable_cars(suit_cars, verified_user, clien
     response = client.get(reverse('suitable-car-detail',
                                   kwargs={'pk': 1}))
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize('verified_user', ['SELLER'], indirect=True)
+def test_front_suitable_cars_filters(suit_cars, verified_user, client):
+    user = verified_user['user_instance']
+    client.force_authenticate(user=user)
+    car_model_id = suit_cars[3]['car'].car_model.all()[0].id
+    data = {'car_model': car_model_id}
+    response = client.get(reverse('suitable-car-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert data['car_model'] in response.data[0]['car_model']
+    dealer_id = suit_cars[2]['car'].dealer.all()[0].id
+    data = {'dealer': dealer_id}
+    response = client.get(reverse('suitable-car-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert data['dealer'] in response.data[0]['dealer']
+
+
+def test_own_suitable_cars_filter(suit_cars, client):
+    user = suit_cars[0]['dealer'].user
+    client.force_authenticate(user=user)
+    car_model_id = suit_cars[3]['car'].car_model.all()[0].id
+    data = {'car_model': car_model_id}
+    response = client.get(reverse('my-suitable-car-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert data['car_model'] in response.data[0]['car_model']
