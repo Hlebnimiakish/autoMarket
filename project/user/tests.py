@@ -247,3 +247,49 @@ def test_login_with_invalid_user_data(user_data, client):
     response = client.post(reverse("get-token"),
                            data=user_data)
     assert response.status_code == 401
+
+
+@pytest.mark.parametrize('verified_user',
+                         ['DEALER'],
+                         indirect=True)
+def test_profile_search_filters(verified_user,
+                                all_profiles,
+                                additional_profiles,
+                                client):
+    data = {"search": additional_profiles['dealer']['profile_data']['name']}
+    response = client.get(reverse('dealer-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert response.data[0]['name'] == data['search']
+    data = {"search": additional_profiles['seller']['profile_data']['name']}
+    response = client.get(reverse('seller-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert response.data[0]['name'] == data['search']
+    for field in ['drivers_license_number', 'firstname', 'lastname']:
+        data = {'search': additional_profiles['buyer']['profile_data'][str(field)]}
+        response = client.get(reverse('buyer-list'),
+                              data=data)
+        assert response.status_code == 200
+        assert response.data[0][str(field)] == data['search']
+
+
+@pytest.mark.parametrize('verified_user',
+                         ['DEALER'],
+                         indirect=True)
+def test_dealer_profile_ordering_filters(verified_user,
+                                         all_profiles,
+                                         additional_profiles,
+                                         client):
+    data = {'ordering': 'year_of_creation'}
+    response = client.get(reverse('seller-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert response.data[0]['year_of_creation'] <= \
+           response.data[1]['year_of_creation']
+    data = {'ordering': '-year_of_creation'}
+    response = client.get(reverse('seller-list'),
+                          data=data)
+    assert response.status_code == 200
+    assert response.data[0]['year_of_creation'] >= \
+           response.data[1]['year_of_creation']

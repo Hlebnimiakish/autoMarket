@@ -146,3 +146,37 @@ def create_buyer_profile_data():
         "drivers_license_number": str(uuid.uuid4().hex)
     }
     return buyer_profile_data
+
+
+@pytest.fixture(scope='function', name='additional_profiles')
+def create_additional_profiles(dealer_profile,
+                               seller_profile,
+                               buyer_profile):
+    profiles = {"DEALER": dealer_profile,
+                "SELLER": seller_profile,
+                "BUYER": buyer_profile}
+    models = {'DEALER': AutoDealerModel,
+              'SELLER': AutoSellerModel,
+              'BUYER': CarBuyerModel}
+    serializers = {'DEALER': AutoDealerSerializer,
+                   'SELLER': AutoSellerSerializer,
+                   'BUYER': CarBuyerSerializer}
+    created_profiles = {}
+    for user_type in ["DEALER", "SELLER", "BUYER"]:
+        password = uuid.uuid4().hex
+        filler = uuid.uuid4().hex
+        user_data = {
+            "username": f"test{filler}",
+            "password": f"pass{password}",
+            "email": f"test{filler}@am.com",
+            "user_type": str(user_type),
+            "is_verified": True
+        }
+        user = CustomUserModel.objects.create_user(**user_data)
+        profile = profiles[str(user_type)]
+        profile['user'] = user
+        profile = models[str(user_type)].objects.create(**profile)
+        profile_data = serializers[str(user_type)](profile).data
+        created_profiles[str(user_type).lower()] = {"profile_instance": profile,
+                                                    "profile_data": profile_data}
+    return created_profiles
