@@ -82,43 +82,43 @@ def test_dealer_and_seller_history_filters(history_records,
                                            client):
     add_records = {"dealer": dealer_history_record,
                    "seller": seller_history_record}
-    for k, v in add_records.items():
-        user = all_profiles[str(k)]['profile_instance'].user
+    for key, value in add_records.items():
+        user = all_profiles[str(key)]['profile_instance'].user
         client.force_authenticate(user=user)
-        data = {"before_date": v['record_instance'].date}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        data = {"before_date": value['record_instance'].date}
+        response = client.get(reverse(f'my-{key}-sales-history-list'),
                               data=data)
         assert response.status_code == 200
         assert datetime.strptime(response.data[0]['date'], '%Y-%m-%d').date() \
                <= data["before_date"]
-        data = {"after_date": v['record_instance'].date}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        data = {"after_date": value['record_instance'].date}
+        response = client.get(reverse(f'my-{key}-sales-history-list'),
                               data=data)
         assert response.status_code == 200
         assert datetime.strptime(response.data[0]['date'], '%Y-%m-%d').date() \
                >= data["after_date"]
         for field in ['selling_price', 'sold_cars_quantity', 'deal_sum']:
-            data = {f'min_{field}': v['record_data'][str(field)]}
-            response = client.get(reverse(f'my-{k}-sales-history-list'),
+            data = {f'min_{field}': value['record_data'][str(field)]}
+            response = client.get(reverse(f'my-{key}-sales-history-list'),
                                   data=data)
             assert response.status_code == 200
             assert float(response.data[0][str(field)]) >= \
                    float(data[f'min_{field}'])
-            data = {f'max_{field}': v['record_data'][str(field)]}
-            response = client.get(reverse(f'my-{k}-sales-history-list'),
+            data = {f'max_{field}': value['record_data'][str(field)]}
+            response = client.get(reverse(f'my-{key}-sales-history-list'),
                                   data=data)
             assert response.status_code == 200
             assert float(response.data[0][str(field)]) <= \
                    float(data[f'max_{field}'])
         for field in ['sold_car_model', 'car_buyer', 'selling_price',
                       'sold_cars_quantity', 'deal_sum']:
-            data = {str(field): v['record_data'][str(field)]}
-            response = client.get(reverse(f'my-{k}-sales-history-list'),
+            data = {str(field): value['record_data'][str(field)]}
+            response = client.get(reverse(f'my-{key}-sales-history-list'),
                                   data=data)
             assert response.status_code == 200
             assert response.data[0][str(field)] >= data[str(field)]
         bad_data = {"selling_price": 100000000}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        response = client.get(reverse(f'my-{key}-sales-history-list'),
                               data=bad_data)
         assert response.status_code == 200
         assert response.data == []
@@ -176,15 +176,15 @@ def test_dealer_and_seller_search_history_filters(history_records,
                                                   client):
     add_records = {"dealer": dealer_history_record,
                    "seller": seller_history_record}
-    for k, v in add_records.items():
-        user = all_profiles[str(k)]['profile_instance'].user
+    for key, value in add_records.items():
+        user = all_profiles[str(key)]['profile_instance'].user
         client.force_authenticate(user=user)
-        car = v['record_instance'].sold_car_model.car_model.car_model_name
+        car = value['record_instance'].sold_car_model.car_model.car_model_name
         data = {'search': str(car)}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        response = client.get(reverse(f'my-{key}-sales-history-list'),
                               data=data)
         assert response.status_code == 200
-        assert v['record_instance'].sold_car_model.id in \
+        assert value['record_instance'].sold_car_model.id in \
                [car['sold_car_model'] for car in response.data]
 
 
@@ -208,31 +208,29 @@ def test_dealer_and_seller_order_history_filters(history_records,
                                                  seller_history_record,
                                                  all_profiles,
                                                  client):
-    add_records = {"dealer": dealer_history_record,
-                   "seller": seller_history_record}
-    for k, v in add_records.items():
-        user = all_profiles[str(k)]['profile_instance'].user
+    for user_type in ["dealer", "seller"]:
+        user = all_profiles[str(user_type)]['profile_instance'].user
         client.force_authenticate(user=user)
         for field in ['deal_sum', 'sold_cars_quantity', 'selling_price']:
             data = {'ordering': str(field)}
-            response = client.get(reverse(f'my-{k}-sales-history-list'),
+            response = client.get(reverse(f'my-{user_type}-sales-history-list'),
                                   data=data)
             assert response.status_code == 200
             assert float(response.data[0][str(field)]) <= \
                    float(response.data[1][str(field)])
             data = {'ordering': f'-{str(field)}'}
-            response = client.get(reverse(f'my-{k}-sales-history-list'),
+            response = client.get(reverse(f'my-{user_type}-sales-history-list'),
                                   data=data)
             assert response.status_code == 200
             assert float(response.data[0][str(field)]) >= \
                    float(response.data[1][str(field)])
         data = {'ordering': 'date'}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        response = client.get(reverse(f'my-{user_type}-sales-history-list'),
                               data=data)
         assert response.status_code == 200
         assert response.data[0]['date'] <= response.data[1]['date']
         data = {'ordering': '-date'}
-        response = client.get(reverse(f'my-{k}-sales-history-list'),
+        response = client.get(reverse(f'my-{user_type}-sales-history-list'),
                               data=data)
         assert response.status_code == 200
         assert response.data[0]['date'] >= response.data[1]['date']

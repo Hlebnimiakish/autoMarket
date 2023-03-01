@@ -148,18 +148,18 @@ def test_promo_front_filters(seller_promo, dealer_promo, car_parks,
     client.force_authenticate(user=user)
     user_type = str(additional_promo['promo_instance'].creator.user.user_type).lower()
     promos = {'dealer': dealer_promo, 'seller': seller_promo}
-    for f in ['promo_name', 'promo_description', 'creator']:
-        data = {str(f): promos[str(user_type)]['promo_data'][str(f)]}
+    for field in ['promo_name', 'promo_description', 'creator']:
+        data = {str(field): promos[str(user_type)]['promo_data'][str(field)]}
         response = client.get(reverse(f'{str(user_type)}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == data[str(f)]
-    for f in ['end_date', 'discount_size']:
-        data = {str(f): promos[str(user_type)]['promo_data'][str(f)]}
+        assert response.data[0][str(field)] == data[str(field)]
+    for field in ['end_date', 'discount_size']:
+        data = {str(field): promos[str(user_type)]['promo_data'][str(field)]}
         response = client.get(reverse(f'{str(user_type)}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= data[str(f)]
+        assert response.data[0][str(field)] >= data[str(field)]
     data = {'start_after_date': promos[str(user_type)]['promo_data']['start_date']}
     response = client.get(reverse(f'{str(user_type)}-promo-list'),
                           data=data)
@@ -170,12 +170,12 @@ def test_promo_front_filters(seller_promo, dealer_promo, car_parks,
                           data=data)
     assert response.status_code == 200
     assert response.data[0]['start_date'] <= data['start_before_date']
-    for f in ['promo_aims', 'promo_cars']:
-        data = {str(f): promos[str(user_type)]['promo_data'][str(f)][0]}
+    for field in ['promo_aims', 'promo_cars']:
+        data = {str(field): promos[str(user_type)]['promo_data'][str(field)][0]}
         response = client.get(reverse(f'{str(user_type)}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert data[str(f)] in response.data[0][str(f)]
+        assert data[str(field)] in response.data[0][str(field)]
     bad_data = {'discount_size': 15000}
     response = client.get(reverse(f'{str(user_type)}-promo-list'),
                           data=bad_data)
@@ -188,18 +188,18 @@ def test_promo_own_filters(client, dealer_promo,
     user = additional_promo['promo_instance'].creator.user
     client.force_authenticate(user=user)
     user_type = str(user.user_type).lower()
-    for f in ['promo_name', 'promo_description', 'creator']:
-        data = {str(f): additional_promo['promo_data'][str(f)]}
+    for field in ['promo_name', 'promo_description', 'creator']:
+        data = {str(field): additional_promo['promo_data'][str(field)]}
         response = client.get(reverse(f'my-{user_type}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == data[str(f)]
-    for f in ['end_date', 'discount_size']:
-        data = {str(f): additional_promo['promo_data'][str(f)]}
+        assert response.data[0][str(field)] == data[str(field)]
+    for field in ['end_date', 'discount_size']:
+        data = {str(field): additional_promo['promo_data'][str(field)]}
         response = client.get(reverse(f'my-{user_type}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= data[str(f)]
+        assert response.data[0][str(field)] >= data[str(field)]
     data = {'start_after_date': additional_promo['promo_data']['start_date']}
     response = client.get(reverse(f'my-{user_type}-promo-list'),
                           data=data)
@@ -210,12 +210,12 @@ def test_promo_own_filters(client, dealer_promo,
                           data=data)
     assert response.status_code == 200
     assert response.data[0]['start_date'] <= data['start_before_date']
-    for f in ['promo_aims', 'promo_cars']:
-        data = {str(f): additional_promo['promo_data'][str(f)][0]}
+    for field in ['promo_aims', 'promo_cars']:
+        data = {str(field): additional_promo['promo_data'][str(field)][0]}
         response = client.get(reverse(f'my-{user_type}-promo-list'),
                               data=data)
         assert response.status_code == 200
-        assert data[str(f)] in response.data[0][str(f)]
+        assert data[str(field)] in response.data[0][str(field)]
     bad_data = {'discount_size': 150000}
     response = client.get(reverse(f'my-{user_type}-promo-list'),
                           data=bad_data)

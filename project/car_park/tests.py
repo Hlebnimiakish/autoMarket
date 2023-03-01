@@ -76,22 +76,22 @@ def test_dealer_front_park_filters(car_parks, all_profiles, user_park, client):
     client.force_authenticate(user=user)
     param_field = {'dealer': 'dealer',
                    'car_model': 'car_model'}
-    for p, f in param_field.items():
-        data = {str(p): user_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): user_park['park_data'][str(field)]}
         response = client.get(reverse('dealer-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == \
-               data[str(p)]
+        assert response.data[0][str(field)] == \
+               data[str(param)]
     param_field = {'min_available_number': 'available_number',
                    'min_car_price': 'car_price'}
-    for p, f in param_field.items():
-        data = {str(p): user_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): user_park['park_data'][str(field)]}
         response = client.get(reverse('dealer-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= \
-               data[str(p)]
+        assert response.data[0][str(field)] >= \
+               data[str(param)]
     data = {'max_car_price': user_park['park_data']['car_price']}
     response = client.get(reverse('dealer-park-list'),
                           data=data)
@@ -111,22 +111,22 @@ def test_seller_front_park_filters(car_parks, all_profiles, user_park, client):
     client.force_authenticate(user=user)
     param_field = {'seller': 'seller',
                    'car_model': 'car_model'}
-    for p, f in param_field.items():
-        data = {str(p): user_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): user_park['park_data'][str(field)]}
         response = client.get(reverse('seller-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == \
-               data[str(p)]
+        assert response.data[0][str(field)] == \
+               data[str(param)]
     param_field = {'min_available_number': 'available_number',
                    'min_car_price': 'car_price'}
-    for p, f in param_field.items():
-        data = {str(p): user_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): user_park['park_data'][str(field)]}
         response = client.get(reverse('seller-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= \
-               data[str(p)]
+        assert response.data[0][str(field)] >= \
+               data[str(param)]
     data = {'max_car_price': user_park['park_data']['car_price']}
     response = client.get(reverse('seller-park-list'),
                           data=data)
@@ -146,22 +146,22 @@ def test_dealer_own_park_filters(car_parks, car_park, client):
     client.force_authenticate(user=user)
     param_field = {'dealer': 'dealer',
                    'car_model': 'car_model'}
-    for p, f in param_field.items():
-        data = {str(p): car_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): car_park['park_data'][str(field)]}
         response = client.get(reverse('my-dealer-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == \
-               data[str(p)]
+        assert response.data[0][str(field)] == \
+               data[str(param)]
     param_field = {'min_available_number': 'available_number',
                    'min_car_price': 'car_price'}
-    for p, f in param_field.items():
-        data = {str(p): car_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): car_park['park_data'][str(field)]}
         response = client.get(reverse('my-dealer-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= \
-               data[str(p)]
+        assert response.data[0][str(field)] >= \
+               data[str(param)]
     data = {'max_car_price': car_park['park_data']['car_price']}
     response = client.get(reverse('my-dealer-park-list'),
                           data=data)
@@ -181,22 +181,22 @@ def test_seller_own_park_filters(car_parks, car_park, client):
     client.force_authenticate(user=user)
     param_field = {'seller': 'seller',
                    'car_model': 'car_model'}
-    for p, f in param_field.items():
-        data = {str(p): car_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): car_park['park_data'][str(field)]}
         response = client.get(reverse('my-seller-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] == \
-               data[str(p)]
+        assert response.data[0][str(field)] == \
+               data[str(param)]
     param_field = {'min_available_number': 'available_number',
                    'min_car_price': 'car_price'}
-    for p, f in param_field.items():
-        data = {str(p): car_park['park_data'][str(f)]}
+    for param, field in param_field.items():
+        data = {str(param): car_park['park_data'][str(field)]}
         response = client.get(reverse('my-seller-park-list'),
                               data=data)
         assert response.status_code == 200
-        assert response.data[0][str(f)] >= \
-               data[str(p)]
+        assert response.data[0][str(field)] >= \
+               data[str(param)]
     data = {'max_car_price': car_park['park_data']['car_price']}
     response = client.get(reverse('my-seller-park-list'),
                           data=data)
