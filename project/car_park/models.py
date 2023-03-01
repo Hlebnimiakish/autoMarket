@@ -1,6 +1,5 @@
 from django.db import models
-from django.db.models import (DecimalField, ForeignKey, IntegerField,
-                              OneToOneField)
+from django.db.models import DecimalField, ForeignKey, IntegerField
 from root.common.models import BaseModel
 
 
@@ -15,8 +14,8 @@ class BaseCurrentCarParkModel(BaseModel):
 
 
 class DealerCarParkModel(BaseCurrentCarParkModel):
-    dealer: OneToOneField = OneToOneField('user.AutoDealerModel', on_delete=models.CASCADE)
+    dealer: ForeignKey = ForeignKey('user.AutoDealerModel', on_delete=models.CASCADE)
 
 
 class SellerCarParkModel(BaseCurrentCarParkModel):
-    seller: OneToOneField = OneToOneField('user.AutoSellerModel', on_delete=models.CASCADE)
+    seller: ForeignKey = ForeignKey('user.AutoSellerModel', on_delete=models.CASCADE)
