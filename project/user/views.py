@@ -2,7 +2,8 @@
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from rest_framework import generics, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, status
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +15,7 @@ from root.common.views import (BaseOwnModelRUDView, BaseReadOnlyView,
 
 from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
                      CustomUserModel)
+from .profile_filter import AutoDealerFilter
 from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
                           AutoSellerFrontSerializer, AutoSellerSerializer,
                           CarBuyerFrontSerializer, CarBuyerSerializer,
@@ -25,7 +27,7 @@ class BaseOwnProfileRUDView(BaseOwnModelRUDView):
     user_data = 'user'
 
     def profile_getter(self, request: CustomRequest) -> CustomUserModel:
-        user = self.user_model.objects.get(id=request.user.id)
+        user = self.user_model.objects.get(id=request.user.pk)
         return user
 
 
@@ -86,25 +88,35 @@ class SelfUserProfileRUDView(BaseOwnModelRUDView):
     user_data = 'id'
 
     def profile_getter(self, request: CustomRequest) -> int:
-        id = request.user.id
+        id = request.user.pk
         return id
 
 
 class AutoDealerReadOnlyView(BaseReadOnlyView):
     serializer = AutoDealerFrontSerializer
     model = AutoDealerModel
+    filterset_class = AutoDealerFilter
+    filter_backends = (filters.SearchFilter,
+                       filters.OrderingFilter,
+                       DjangoFilterBackend,)
+    search_fields = ['name']
 
 
 class AutoSellerReadOnlyView(BaseReadOnlyView):
     permission_classes = [IsSeller & IsVerified | IsDealer & IsVerified]
     serializer = AutoSellerFrontSerializer
     model = AutoSellerModel
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['name']
+    ordering_fields = ['year_of_creation']
 
 
 class CarBuyerReadOnlyView(BaseReadOnlyView):
     permission_classes = [IsDealer & IsVerified]
     serializer = CarBuyerFrontSerializer
     model = CarBuyerModel
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['drivers_license_number', 'firstname', 'lastname']
 
 
 class AutoDealerCreateView(BaseProfileCreationView):
