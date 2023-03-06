@@ -21,7 +21,7 @@ class RegularCustomerDiscountLevelsSerializer(ModelSerializer):
                 raise ValidationError("Purchase numbers must be numeric (integer to string)"
                                       ": '<integer value>' or integer: <integer value>")
         for value in discount_map.values():
-            if type(value) != int:
+            if not isinstance(value, int):
                 raise ValidationError("Discount size must be integer: <integer value>")
         return discount_map
 

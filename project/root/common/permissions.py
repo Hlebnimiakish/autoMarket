@@ -27,8 +27,7 @@ class SellerHasNoDiscountSet(permissions.BasePermission):
         seller = AutoSellerModel.objects.get_or_none(user=request.user)
         if seller:
             return not bool(RegularCustomerDiscountLevelsModel.objects.get_or_none(seller=seller))
-        else:
-            return False
+        return False
 
 
 class IsNewUser(permissions.BasePermission):
