@@ -1,6 +1,7 @@
 # mypy: disable-error-code=override
 
 from car_spec.models import DealerSearchCarSpecificationModel
+from discount.models import RegularCustomerDiscountLevelsModel
 from rest_framework import permissions
 from rest_framework.request import Request
 from user.models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
@@ -18,6 +19,15 @@ class UserHasNoProfile(permissions.BasePermission):
         return not bool(AutoDealerModel.objects.get_or_none(user=request.user) or
                         AutoSellerModel.objects.get_or_none(user=request.user) or
                         CarBuyerModel.objects.get_or_none(user=request.user))
+
+
+class SellerHasNoDiscountSet(permissions.BasePermission):
+
+    def has_permission(self, request: CustomUserRequest, view) -> bool:
+        seller = AutoSellerModel.objects.get_or_none(user=request.user)
+        if seller:
+            return not bool(RegularCustomerDiscountLevelsModel.objects.get_or_none(seller=seller))
+        return False
 
 
 class IsNewUser(permissions.BasePermission):

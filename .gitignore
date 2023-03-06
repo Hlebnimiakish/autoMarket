@@ -4,5 +4,6 @@
 mypy.ini
 .flake8
 pytest.ini
-project/*/migrations
+project/*/migrations/*
+!project/*/migrations/__init__.py
 /project/testDB
