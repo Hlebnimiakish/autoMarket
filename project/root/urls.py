@@ -40,6 +40,8 @@ urlpatterns = [
     path('car_specification/', include('car_spec.urls')),
     path('offer/', include('offer.urls')),
     path('promo/', include('promo.urls')),
+    path('discount/', include('discount.urls')),
+    path('debug_toolbar/', include('debug_toolbar.urls')),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$',
             schema_view.without_ui(cache_timeout=0),
             name='schema-json'),
