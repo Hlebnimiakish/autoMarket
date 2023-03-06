@@ -2,8 +2,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models import (BooleanField, CharField, DateTimeField,
-                              DecimalField, EmailField, IntegerField,
-                              OneToOneField)
+                              DecimalField, EmailField, ForeignKey,
+                              IntegerField, OneToOneField)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
@@ -81,3 +81,15 @@ class CarBuyerModel(BaseModel):
     balance: DecimalField = DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     drivers_license_number: CharField = CharField(max_length=100)
     user: OneToOneField = OneToOneField('CustomUserModel', on_delete=models.CASCADE)
+
+
+class DealerFromSellerPurchaseNumber(BaseModel):
+    seller: ForeignKey = ForeignKey('AutoSellerModel', on_delete=models.CASCADE)
+    dealer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
+    purchase_number: IntegerField = IntegerField(blank=True)
+
+
+class BuyerFromDealerPurchaseNumber(BaseModel):
+    buyer: ForeignKey = ForeignKey('CarBuyerModel', on_delete=models.CASCADE)
+    dealer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
+    purchase_number: IntegerField = IntegerField(blank=True)
