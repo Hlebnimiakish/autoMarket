@@ -5,4 +5,5 @@ pytest_plugins = ('user.user_fixtures',
                   'offer.offer_fixtures',
                   'promo.promo_fixtures',
                   'sales_history.history_fixtures',
+                  'discount.discount_fixtures',
                   )
