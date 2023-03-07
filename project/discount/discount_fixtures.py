@@ -1,20 +1,39 @@
+"""This module contains fixtures for discount tests"""
+
 from random import randint
+from typing import Dict, List
 
 import pytest
-from user.models import DealerFromSellerPurchaseNumber
+from django.db.models import CharField
+from root.common.models import BaseModel
+from user.models import (AutoDealerModel, AutoSellerModel,
+                         DealerFromSellerPurchaseNumber)
 
 from .models import CurrentDiscountLevelPerDealerModel as CurrentDiscount
 from .models import RegularCustomerDiscountLevelsModel as DiscountLevels
 
 
+@pytest.fixture(scope='function', name='dealers')
+def create_dealers_list(all_profiles, additional_profiles) -> List[AutoDealerModel]:
+    """Creates and returns list of dealer profiles from all_profiles
+    and additional_profiles for other fixtures"""
+    return [all_profiles['dealer']['profile_instance'],
+            additional_profiles['dealer']['profile_instance']]
+
+
+@pytest.fixture(scope='function', name='sellers')
+def create_sellers_list(all_profiles, additional_profiles) -> List[AutoSellerModel]:
+    """Creates and returns list of seller profiles from all_profiles
+    and additional_profiles for other fixtures"""
+    return [all_profiles['seller']['profile_instance'],
+            additional_profiles['seller']['profile_instance']]
+
+
 @pytest.fixture(scope='function', name='purchases')
-def create_dealer_purchases(all_profiles, additional_profiles):
-    dealer = all_profiles['dealer']['profile_instance']
-    seller = all_profiles['seller']['profile_instance']
-    dealer2 = additional_profiles['dealer']['profile_instance']
-    seller2 = additional_profiles['seller']['profile_instance']
-    sellers = [seller, seller2]
-    dealers = [dealer, dealer2]
+def create_dealer_purchases(dealers, sellers) -> Dict[AutoDealerModel,
+                                                      DealerFromSellerPurchaseNumber]:
+    """Creates records about dealers purchase number, returns dict of dealer
+    profiles with their purchase number records"""
     purchases = {}
     for seller in sellers:
         for dealer in dealers:
@@ -27,10 +46,9 @@ def create_dealer_purchases(all_profiles, additional_profiles):
 
 
 @pytest.fixture(scope='function', name='discounts')
-def create_seller_discounts(all_profiles, additional_profiles):
-    seller = all_profiles['seller']['profile_instance']
-    seller2 = additional_profiles['seller']['profile_instance']
-    sellers = [seller, seller2]
+def create_seller_discounts(sellers) -> Dict[BaseModel, Dict[str, DiscountLevels | dict]]:
+    """Creates records about sellers discount levels, returns dict of seller
+        profiles with their discount records"""
     discounts = {}
     for seller in sellers:
         discount_map = {randint(1, 2): randint(3, 10),
@@ -47,14 +65,10 @@ def create_seller_discounts(all_profiles, additional_profiles):
 @pytest.fixture(scope='function', name='current_levels')
 def create_current_discount_levels(purchases,
                                    discounts,
-                                   all_profiles,
-                                   additional_profiles):
-    dealer = all_profiles['dealer']['profile_instance']
-    seller = all_profiles['seller']['profile_instance']
-    dealer2 = additional_profiles['dealer']['profile_instance']
-    seller2 = additional_profiles['seller']['profile_instance']
-    sellers = [seller, seller2]
-    dealers = [dealer, dealer2]
+                                   sellers,
+                                   dealers) -> Dict[CharField, CurrentDiscount]:
+    """Creates records about current dealers discount level, returns dict of dealer profile
+    names with their current discount level records"""
     discounts_map = {}
     for seller in sellers:
         for dealer in dealers:
