@@ -32,7 +32,7 @@ def create_sellers_list(all_profiles, additional_profiles) -> List[AutoSellerMod
 @pytest.fixture(scope='function', name='purchases')
 def create_dealer_purchases(dealers, sellers) -> Dict[AutoDealerModel,
                                                       DealerFromSellerPurchaseNumber]:
-    """Creates records about dealers purchase number, returns dict of dealer
+    """Creates db records of dealers purchase number, returns dict of dealer
     profiles with their purchase number records"""
     purchases = {}
     for seller in sellers:
@@ -47,7 +47,7 @@ def create_dealer_purchases(dealers, sellers) -> Dict[AutoDealerModel,
 
 @pytest.fixture(scope='function', name='discounts')
 def create_seller_discounts(sellers) -> Dict[BaseModel, Dict[str, DiscountLevels | dict]]:
-    """Creates records about sellers discount levels, returns dict of seller
+    """Creates db records of sellers discount levels, returns dict of seller
         profiles with their discount records"""
     discounts = {}
     for seller in sellers:
@@ -67,7 +67,7 @@ def create_current_discount_levels(purchases,
                                    discounts,
                                    sellers,
                                    dealers) -> Dict[CharField, CurrentDiscount]:
-    """Creates records about current dealers discount level, returns dict of dealer profile
+    """Creates db records of current dealers discount level, returns dict of dealer profile
     names with their current discount level records"""
     discounts_map = {}
     for seller in sellers:
