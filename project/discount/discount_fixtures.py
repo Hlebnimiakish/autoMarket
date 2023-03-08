@@ -1,7 +1,6 @@
 """This module contains fixtures for discount tests"""
 
 from random import randint
-from typing import Dict, List
 
 import pytest
 from django.db.models import CharField
@@ -11,10 +10,12 @@ from user.models import (AutoDealerModel, AutoSellerModel,
 
 from .models import CurrentDiscountLevelPerDealerModel as CurrentDiscount
 from .models import RegularCustomerDiscountLevelsModel as DiscountLevels
+from .serializers import \
+    RegularCustomerDiscountLevelsSerializer as DiscountSerializer
 
 
 @pytest.fixture(scope='function', name='dealers')
-def create_dealers_list(all_profiles, additional_profiles) -> List[AutoDealerModel]:
+def create_dealers_list(all_profiles, additional_profiles) -> list[AutoDealerModel]:
     """Creates and returns list of dealer profiles from all_profiles
     and additional_profiles for other fixtures"""
     return [all_profiles['dealer']['profile_instance'],
@@ -22,7 +23,7 @@ def create_dealers_list(all_profiles, additional_profiles) -> List[AutoDealerMod
 
 
 @pytest.fixture(scope='function', name='sellers')
-def create_sellers_list(all_profiles, additional_profiles) -> List[AutoSellerModel]:
+def create_sellers_list(all_profiles, additional_profiles) -> list[AutoSellerModel]:
     """Creates and returns list of seller profiles from all_profiles
     and additional_profiles for other fixtures"""
     return [all_profiles['seller']['profile_instance'],
@@ -30,35 +31,40 @@ def create_sellers_list(all_profiles, additional_profiles) -> List[AutoSellerMod
 
 
 @pytest.fixture(scope='function', name='purchases')
-def create_dealer_purchases(dealers, sellers) -> Dict[AutoDealerModel,
+def create_dealer_purchases(dealers, sellers) -> dict[AutoDealerModel,
                                                       DealerFromSellerPurchaseNumber]:
     """Creates db records of dealers purchase number, returns dict of dealer
     profiles with their purchase number records"""
+    purchases_list = []
     purchases = {}
     for seller in sellers:
         for dealer in dealers:
-            purchase_record = {'seller': seller,
-                               'dealer': dealer,
-                               'purchase_number': randint(2, 50)}
-            purchase = DealerFromSellerPurchaseNumber.objects.create(**purchase_record)
-            purchases[dealer] = purchase
+            purchase_data = {'seller': seller,
+                             'dealer': dealer,
+                             'purchase_number': randint(2, 50)}
+            purchases_list.append(DealerFromSellerPurchaseNumber(**purchase_data))
+    purchases_list = DealerFromSellerPurchaseNumber.objects.bulk_create(purchases_list)
+    for purchase in purchases_list:
+        purchases[purchase.dealer] = purchase
     return purchases
 
 
 @pytest.fixture(scope='function', name='discounts')
-def create_seller_discounts(sellers) -> Dict[BaseModel, Dict[str, DiscountLevels | dict]]:
-    """Creates db records of sellers discount levels, returns dict of seller
-        profiles with their discount records"""
-    discounts = {}
+def create_seller_discounts(sellers) -> dict[BaseModel, DiscountLevels]:
+    """Creates db records of sellers discount levels, returns dict of
+    seller profiles with their discount records"""
+    discounts_list = []
     for seller in sellers:
         discount_map = {randint(1, 2): randint(3, 10),
                         randint(5, 10): randint(11, 15),
                         randint(20, 50): randint(20, 30)}
         discount_data = {'seller': seller,
                          'purchase_number_discount_map': discount_map}
-        discount = DiscountLevels.objects.create(**discount_data)
-        discounts[seller] = {'discount_instance': discount,
-                             'discount_data': discount_data}
+        discounts_list.append(DiscountLevels(**discount_data))
+    created_discounts = DiscountLevels.objects.bulk_create(discounts_list)
+    discounts = {}
+    for discount in created_discounts:
+        discounts[discount.seller] = discount
     return discounts
 
 
@@ -66,24 +72,27 @@ def create_seller_discounts(sellers) -> Dict[BaseModel, Dict[str, DiscountLevels
 def create_current_discount_levels(purchases,
                                    discounts,
                                    sellers,
-                                   dealers) -> Dict[CharField, CurrentDiscount]:
-    """Creates db records of current dealers discount level, returns dict of dealer profile
-    names with their current discount level records"""
+                                   dealers) -> dict[CharField, CurrentDiscount]:
+    """Creates db records of current dealers discount level, returns dict of
+    dealer profile names with their current discount level records"""
     discounts_map = {}
+    current_discounts_list = []
     for seller in sellers:
         for dealer in dealers:
             purchase_number = purchases[dealer].purchase_number
             discount_map = \
-                discounts[seller]['discount_data']['purchase_number_discount_map']
+                DiscountSerializer(discounts[seller]).data['purchase_number_discount_map']
             purchase_number_to_discount = sorted([int(key) for key in
                                                  discount_map.keys()], reverse=True)
             for number in purchase_number_to_discount:
                 if int(purchase_number) >= int(number):
                     discount_data = {"seller": seller,
                                      "dealer": dealer,
-                                     "current_discount": discount_map[number],
+                                     "current_discount": discount_map[str(number)],
                                      "current_purchase_number": purchase_number}
-                    current_discount = CurrentDiscount.objects.create(**discount_data)
-                    discounts_map[dealer.name] = current_discount
+                    current_discounts_list.append(CurrentDiscount(**discount_data))
                     break
+    current_discounts = CurrentDiscount.objects.bulk_create(current_discounts_list)
+    for discount in current_discounts:
+        discounts_map[discount.dealer.name] = discount
     return discounts_map
