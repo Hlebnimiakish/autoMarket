@@ -65,18 +65,12 @@ def create_seller_discounts(sellers: list) -> dict[BaseModel, DiscountLevels]:
     """Creates db records of sellers discount levels, returns dict of
     seller profiles with their discount records"""
     discounts_list = []
-    try:
-        latest_id = DiscountLevels.objects.latest('id').pk
-    except DiscountLevels.DoesNotExist:  # pylint: disable=no-member
-        latest_id = 1
     for seller in sellers:
         discount_map = {randint(1, 2): randint(3, 10),
                         randint(5, 10): randint(11, 15),
                         randint(20, 50): randint(20, 30)}
-        discount_data = {'id': latest_id,
-                         'seller': seller,
+        discount_data = {'seller': seller,
                          'purchase_number_discount_map': discount_map}
-        latest_id = latest_id + 1
         discounts_list.append(DiscountLevels(**discount_data))
     created_discounts = DiscountLevels.objects.bulk_create(discounts_list)
     discounts = {}
@@ -94,10 +88,6 @@ def create_current_discount_levels(purchases: dict,
     dealer profile names with their current discount level records"""
     discounts_map = {}
     current_discounts_list = []
-    try:
-        latest_id = CurrentDiscount.objects.latest('id').pk
-    except CurrentDiscount.DoesNotExist:  # pylint: disable=no-member
-        latest_id = 1
     for seller in sellers:
         for dealer in dealers:
             purchase_number = purchases[dealer].purchase_number
@@ -107,12 +97,10 @@ def create_current_discount_levels(purchases: dict,
                                                  discount_map.keys()], reverse=True)
             for number in purchase_number_to_discount:
                 if int(purchase_number) >= int(number):
-                    discount_data = {"id": latest_id,
-                                     "seller": seller,
+                    discount_data = {"seller": seller,
                                      "dealer": dealer,
                                      "current_discount": discount_map[str(number)],
                                      "current_purchase_number": purchase_number}
-                    latest_id = latest_id + 1
                     current_discounts_list.append(CurrentDiscount(**discount_data))
                     break
     current_discounts = CurrentDiscount.objects.bulk_create(current_discounts_list)

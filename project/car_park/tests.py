@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import pytest
 from django.urls import reverse
 
@@ -10,6 +12,7 @@ def test_users_can_view_dealer_auto_park(car_parks, all_users, client):
         response = client.get(reverse('dealer-park-list'))
         assert response.status_code == 200
         assert response.data[0]['available_number']
+        print(response.data)
         response = client.get(reverse('dealer-park-detail',
                                       kwargs={"pk": 1}))
         assert response.status_code == 200
@@ -22,8 +25,9 @@ def test_dealer_can_view_sellers_auto_park(car_parks, client):
     response = client.get(reverse('seller-park-list'))
     assert response.status_code == 200
     assert response.data[0]['available_number']
+    pk = response.data[0]['id']
     response = client.get(reverse('seller-park-detail',
-                                  kwargs={"pk": 1}))
+                                  kwargs={"pk": pk}))
     assert response.status_code == 200
     assert response.data['car_price']
 
@@ -52,8 +56,9 @@ def test_seller_can_view_his_own_auto_park(car_parks, client):
     response = client.get(reverse('my-seller-park-list'))
     assert response.status_code == 200
     assert response.data[0]['available_number']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-seller-park-detail',
-                                  kwargs={"pk": 1}))
+                                  kwargs={"pk": pk}))
     assert response.status_code == 200
     assert response.data['car_price']
 
@@ -64,8 +69,9 @@ def test_dealer_can_view_his_own_auto_park(car_parks, client):
     response = client.get(reverse('my-dealer-park-list'))
     assert response.status_code == 200
     assert response.data[0]['available_number']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-dealer-park-detail',
-                                  kwargs={"pk": 1}))
+                                  kwargs={"pk": pk}))
     assert response.status_code == 200
     assert response.data['car_price']
 

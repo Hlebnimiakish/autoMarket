@@ -12,13 +12,8 @@ def create_cars() -> list[MarketAvailableCarModel]:
     """Creates definite number of db records of market available
     cars and returns list of created car instances"""
     cars_data = []
-    try:
-        latest_id = MarketAvailableCarModel.objects.latest('id').pk
-    except MarketAvailableCarModel.DoesNotExist:  # pylint: disable=no-member
-        latest_id = 1
     for _ in range(10):
         car_data = {
-            "id": latest_id,
             "brand_name": choice(['Mesla', 'PulseWagen', 'Meely', 'Konda',
                                   'Pissan', 'Laudi', 'Koyota', 'Peat']),
             "car_model_name": choice(['Carbon', 'Leman', 'Turtle', 'Rabbit', 'Hobbit',
@@ -38,7 +33,6 @@ def create_cars() -> list[MarketAvailableCarModel]:
             "color": choice(['red', 'green', 'blue', 'black', 'white']),
             'demand_level': randint(0, 100)
         }
-        latest_id = latest_id + 1
         cars_data.append(MarketAvailableCarModel(**car_data))
     cars = MarketAvailableCarModel.objects.bulk_create(cars_data)
     return cars

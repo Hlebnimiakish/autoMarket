@@ -173,7 +173,9 @@ def test_dealer_can_view_other_users(all_users, all_profiles, client):
         response = client.get(reverse(f'{user_type}-list'))
         assert response.status_code == 200
         assert response.data[0]['id']
-        response = client.get(reverse(f'{user_type}-detail', kwargs={"pk": 1}))
+        pk = response.data[0]['id']
+        response = client.get(reverse(f'{user_type}-detail',
+                                      kwargs={"pk": pk}))
         assert response.status_code == 200
         assert response.data['id']
 
@@ -187,14 +189,17 @@ def test_buyer_can_view_other_users(all_users, all_profiles, client):
     for user_type in ['seller', 'buyer']:
         response = client.get(reverse(f'{user_type}-list'))
         assert response.status_code == 403
-        response = client.get(reverse(f'{user_type}-detail', kwargs={"pk": 1}))
+        response = client.get(reverse(f'{user_type}-detail',
+                                      kwargs={"pk": 1}))
         assert response.status_code == 403
 
     # Buyers can view dealer profiles
     response = client.get(reverse("dealer-list"))
     assert response.status_code == 200
     assert response.data[0]['id']
-    response = client.get(reverse("dealer-detail", kwargs={"pk": 1}))
+    pk = response.data[0]['id']
+    response = client.get(reverse("dealer-detail",
+                                  kwargs={"pk": pk}))
     assert response.status_code == 200
     assert response.data['id']
 
@@ -209,14 +214,17 @@ def test_seller_can_view_other_users(all_users, all_profiles, client):
         response = client.get(reverse(f'{user_type}-list'))
         assert response.status_code == 200
         assert response.data[0]['id']
-        response = client.get(reverse(f'{user_type}-detail', kwargs={"pk": 1}))
+        pk = response.data[0]['id']
+        response = client.get(reverse(f'{user_type}-detail',
+                                      kwargs={"pk": pk}))
         assert response.status_code == 200
         assert response.data['id']
 
     # Sellers can't view buyer profiles
     response = client.get(reverse("buyer-list"))
     assert response.status_code == 403
-    response = client.get(reverse("buyer-detail", kwargs={"pk": 1}))
+    response = client.get(reverse("buyer-detail",
+                                  kwargs={"pk": 1}))
     assert response.status_code == 403
 
 

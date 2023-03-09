@@ -11,8 +11,9 @@ def test_dealer_can_view_buyers_offers(offer, verified_user, client):
     response = client.get(reverse('offer-list'))
     assert response.status_code == 200
     assert response.data[0]['max_price']
+    pk = response.data[0]['id']
     response = client.get(reverse('offer-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 

@@ -74,8 +74,9 @@ def test_seller_can_view_dealers_suitable_cars(suit_cars, verified_user, client)
     response = client.get(reverse('suitable-car-list'))
     assert response.status_code == 200
     assert response.data[0]['car_model']
+    pk = response.data[0]['id']
     response = client.get(reverse('suitable-car-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 
@@ -86,8 +87,9 @@ def test_dealer_can_view_his_suitable_cars(suit_cars, client):
     response = client.get(reverse('my-suitable-car-list'))
     assert response.status_code == 200
     assert response.data[0]['car_model']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-suitable-car-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 
