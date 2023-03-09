@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import uuid
 from random import choice
 
@@ -87,6 +89,7 @@ def test_verified_users_can_create_profile(verified_user, dealer_profile, client
     response = client.post(reverse("dealer-creation"),
                            data=dealer_profile)
     assert response.status_code == 201
+    assert response.data['name'] == dealer_profile['name']
 
 
 @pytest.mark.parametrize('verified_user',
