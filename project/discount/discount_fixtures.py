@@ -42,17 +42,11 @@ def create_dealer_purchases(dealers: list,
     profiles with their purchase number records"""
     purchases_list = []
     purchases = {}
-    try:
-        latest_id = DealerFromSellerPurchaseNumber.objects.latest('id').pk
-    except DealerFromSellerPurchaseNumber.DoesNotExist:  # pylint: disable=no-member
-        latest_id = 1
     for seller in sellers:
         for dealer in dealers:
-            purchase_data = {'id': latest_id,
-                             'seller': seller,
+            purchase_data = {'seller': seller,
                              'dealer': dealer,
-                             'purchase_number': randint(2, 50)}
-            latest_id = latest_id + 1
+                             'purchase_number': randint(2, 45)}
             purchases_list.append(DealerFromSellerPurchaseNumber(**purchase_data))
     purchases_list = DealerFromSellerPurchaseNumber.objects.bulk_create(purchases_list)
     for purchase in purchases_list:
