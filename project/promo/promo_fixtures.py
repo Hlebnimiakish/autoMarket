@@ -1,3 +1,7 @@
+# pylint: disable=too-many-locals
+
+"""This module contains fixtures for promo tests"""
+
 import uuid
 from datetime import timedelta
 from random import choice, randint
@@ -5,14 +9,16 @@ from random import choice, randint
 import pytest
 from car_park.models import DealerCarParkModel, SellerCarParkModel
 from django.utils import timezone
+from pytest import FixtureRequest
 from user.models import AutoDealerModel, AutoSellerModel, CustomUserModel
 
-from .models import DealerPromoModel, SellerPromoModel
+from .models import BasePromoModel, DealerPromoModel, SellerPromoModel
 from .serializers import DealersPromoSerializer, SellersPromoSerializer
 
 
 @pytest.fixture(scope='function', name='promo_data')
-def create_promo_data():
+def create_promo_data() -> dict:
+    """Creates and returns a dict of required promo data"""
     promo_data = {
         "promo_name": f"promo{uuid.uuid4().hex}",
         "promo_description": "This promo is a test promo",
@@ -24,7 +30,12 @@ def create_promo_data():
 
 
 @pytest.fixture(scope='function', name='dealer_promo')
-def create_dealer_promo(all_profiles, car_parks, promo_data):
+def create_dealer_promo(all_profiles: dict,
+                        car_parks: dict,
+                        promo_data: dict) -> dict[str, DealerPromoModel | dict]:
+    """Creates db record of dealer promo, adds dealer's car park and buyer profile to
+    created promo cars and aims, returns dict of created dealer promo instance and
+    it's creation data"""
     promo_data['creator'] = \
         all_profiles['dealer']['profile_instance']
     dealer_promo = DealerPromoModel.objects.create(**promo_data)
@@ -36,7 +47,12 @@ def create_dealer_promo(all_profiles, car_parks, promo_data):
 
 
 @pytest.fixture(scope='function', name='seller_promo')
-def create_seller_promo(all_profiles, car_parks, promo_data):
+def create_seller_promo(all_profiles: dict,
+                        car_parks: dict,
+                        promo_data: dict) -> dict[str, SellerPromoModel | dict]:
+    """Creates db record of seller promo, adds seller's car park and dealer profile to
+    created promo cars and aims, returns dict of created seller promo instance and
+    it's creation data"""
     promo_data['creator'] = \
         all_profiles['seller']['profile_instance']
     seller_promo = SellerPromoModel.objects.create(**promo_data)
@@ -48,8 +64,14 @@ def create_seller_promo(all_profiles, car_parks, promo_data):
 
 
 @pytest.fixture(scope='function', name='additional_promo')
-def create_additional_promo(request, dealer_profile, seller_profile,
-                            all_profiles, cars):
+def create_additional_promo(request: FixtureRequest,
+                            dealer_profile: dict,
+                            seller_profile: dict,
+                            all_profiles: dict,
+                            cars: list) -> dict[str, dict | BasePromoModel]:
+    """Creates db record of promo for passed user_type parameter, creates and adds
+    corresponding car park and potential 'buyer' profile to created promo cars and aims,
+    returns dict of created promo instance and it's creation data"""
     password = uuid.uuid4().hex
     filler = uuid.uuid4().hex
     user_data = {
@@ -84,7 +106,7 @@ def create_additional_promo(request, dealer_profile, seller_profile,
     }
     promo = models[str(request.param)].objects.create(**promo_data)
     park_data = {
-        "car_model": choice([c for c in cars]),
+        "car_model": choice(list(cars)),
         "available_number": randint(1, 10),
         "car_price": randint(1000, 10000),
         str(request.param): owner

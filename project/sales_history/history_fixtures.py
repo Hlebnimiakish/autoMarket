@@ -1,18 +1,25 @@
+"""This module contains fixtures for sales_history tests"""
+
 from datetime import date
 from random import choice, randint
 
 import pytest
 from car_park.models import DealerCarParkModel, SellerCarParkModel
 
-from .models import (CarBuyerHistoryModel, DealerSalesHistoryModel,
-                     SellerSalesHistoryModel)
+from .models import (BaseSalesHistoryModel, CarBuyerHistoryModel,
+                     DealerSalesHistoryModel, SellerSalesHistoryModel)
 from .serializers import (CarBuyersHistorySerializer,
                           DealerSalesHistorySerializer,
                           SellerSalesHistorySerializer)
 
 
 @pytest.fixture(scope='function', name='history_records')
-def create_history_record_for_each_user(car_parks, all_profiles):
+def create_history_record_for_each_user(car_parks: dict,
+                                        all_profiles: dict) -> dict[str,
+                                                                    BaseSalesHistoryModel |
+                                                                    CarBuyerHistoryModel]:
+    """Creates db history record with generated history record data for all user_types,
+    returns dict of user_type with his created history record instance"""
     records = {}
     for seller, buyer in {'dealer': 'buyer',
                           'seller': 'dealer'}.items():
@@ -52,9 +59,14 @@ def create_history_record_for_each_user(car_parks, all_profiles):
 
 
 @pytest.fixture(scope='function', name='dealer_history_record')
-def create_additional_dealer_history_record(all_profiles, cars):
+def create_additional_dealer_history_record(all_profiles: dict,
+                                            cars: list) -> dict[str,
+                                                                dict | DealerSalesHistoryModel]:
+    """Creates dealer car_park db record with generated data, creates dealer history
+    db record with generated data, returns dict of created history record instance with
+    it's creation data"""
     park_data = {
-        "car_model": choice([c for c in cars]),
+        "car_model": choice(list(cars)),
         "available_number": randint(1, 10),
         "car_price": randint(1000, 10000),
         "dealer": all_profiles['dealer']['profile_instance']
@@ -79,9 +91,14 @@ def create_additional_dealer_history_record(all_profiles, cars):
 
 
 @pytest.fixture(scope='function', name='seller_history_record')
-def create_additional_seller_history_record(all_profiles, cars):
+def create_additional_seller_history_record(all_profiles: dict,
+                                            cars: list) -> dict[str,
+                                                                dict | SellerSalesHistoryModel]:
+    """Creates seller car_park db record with generated data, creates seller history
+    db record with generated data, returns dict of created history record instance with
+    it's creation data"""
     park_data = {
-        "car_model": choice([c for c in cars]),
+        "car_model": choice(list(cars)),
         "available_number": randint(1, 10),
         "car_price": randint(1000, 10000),
         "seller": all_profiles['seller']['profile_instance']
@@ -106,9 +123,14 @@ def create_additional_seller_history_record(all_profiles, cars):
 
 
 @pytest.fixture(scope='function', name='buyer_history_record')
-def create_additional_buyer_history_record(all_profiles, cars):
+def create_additional_buyer_history_record(all_profiles: dict,
+                                           cars: list) -> dict[str,
+                                                               dict | CarBuyerHistoryModel]:
+    """Creates dealer car_park db record with generated data, creates buyer history
+    db record with generated data, returns dict of created history record instance with
+    it's creation data"""
     park_data = {
-        "car_model": choice([c for c in cars]),
+        "car_model": choice(list(cars)),
         "available_number": randint(1, 10),
         "car_price": randint(1000, 10000),
         "dealer": all_profiles['dealer']['profile_instance']
