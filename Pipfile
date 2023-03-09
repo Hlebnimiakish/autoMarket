@@ -10,6 +10,8 @@ django-countries = "*"
 psycopg2-binary = "*"
 djangorestframework-simplejwt = "*"
 django-filter = "*"
+celery = "*"
+django-celery-beat = "*"
 
 [dev-packages]
 pylint = "*"
@@ -23,6 +25,7 @@ isort = {extras = ["pipfile_deprecated_finder"], version = "*"}
 django-rest-swagger = "*"
 drf-yasg = "*"
 pytest-django = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3.10"
