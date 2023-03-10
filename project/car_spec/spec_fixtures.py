@@ -1,13 +1,18 @@
+"""This module contains fixtures for car_spec tests"""
+
 from random import choice, randint
 
 import pytest
+from car_market.models import MarketAvailableCarModel
+from user.models import AutoDealerModel
 
 from .models import DealerSearchCarSpecificationModel, DealerSuitableCarModel
 from .serializers import DealerSearchCarSpecificationsSerializer
 
 
 @pytest.fixture(scope='function', name='spec_data')
-def create_spec_data():
+def create_spec_data() -> dict:
+    """Creates and returns dict of required car_specification data"""
     spec_data = {
         "transmission": choice(['MANUAL', 'AUTO', 'ROBOTIC']),
         "body_type": choice(["COUPE", "SEDAN", "HATCHBACK", "SUV", "MINIVAN"]),
@@ -27,7 +32,11 @@ def create_spec_data():
 
 
 @pytest.fixture(scope='function', name='spec')
-def create_spec(all_profiles, spec_data):
+def create_spec(all_profiles: dict, spec_data: dict) -> dict[str,
+                                                             dict |
+                                                             DealerSearchCarSpecificationModel]:
+    """Creates db record of dealer search car specification, returns dict
+    of created car specification instance and it's creation data"""
     dealer = all_profiles['dealer']['profile_instance']
     spec_data['dealer'] = dealer
     created_spec = DealerSearchCarSpecificationModel.objects.create(**spec_data)
@@ -38,12 +47,17 @@ def create_spec(all_profiles, spec_data):
 
 
 @pytest.fixture(scope='function', name='suit_cars')
-def add_suitable_cars(spec, cars):
-    added_cars = []
+def add_suitable_cars(spec: dict, cars: list) -> dict[str,
+                                                      AutoDealerModel |
+                                                      list[MarketAvailableCarModel]]:
+    """Creates db record of dealer suitable cars, adds all cars from market available
+     cars to dealer suitable cars list, returns list of dicts of dealer instance and
+     his suitable cars"""
+    dealer = spec['spec_instance'].dealer
+    suit_cars = DealerSuitableCarModel.objects.create(dealer=dealer)
+    added_cars = {'dealer': dealer,
+                  'cars': []}
     for car in cars:
-        added_car = DealerSuitableCarModel.objects.create()
-        added_car.car_model.add(car)
-        added_car.dealer.add(spec['spec_instance'].dealer)
-        added_cars.append({'car': added_car,
-                          'dealer': spec['spec_instance'].dealer})
+        suit_cars.car_model.add(car)
+        added_cars['cars'].append(car)
     return added_cars

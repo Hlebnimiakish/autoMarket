@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import pytest
 from django.urls import reverse
 
@@ -72,20 +74,22 @@ def test_seller_can_view_dealers_suitable_cars(suit_cars, verified_user, client)
     response = client.get(reverse('suitable-car-list'))
     assert response.status_code == 200
     assert response.data[0]['car_model']
+    pk = response.data[0]['id']
     response = client.get(reverse('suitable-car-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 
 
 def test_dealer_can_view_his_suitable_cars(suit_cars, client):
-    user = suit_cars[0]['dealer'].user
+    user = suit_cars['dealer'].user
     client.force_authenticate(user=user)
     response = client.get(reverse('my-suitable-car-list'))
     assert response.status_code == 200
     assert response.data[0]['car_model']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-suitable-car-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 
@@ -103,24 +107,24 @@ def test_buyer_can_not_view_dealer_suitable_cars(suit_cars, verified_user, clien
 def test_front_suitable_cars_filters(suit_cars, verified_user, client):
     user = verified_user['user_instance']
     client.force_authenticate(user=user)
-    car_model_id = suit_cars[3]['car'].car_model.all()[0].id
+    car_model_id = suit_cars['cars'][3].pk
     data = {'car_model': car_model_id}
     response = client.get(reverse('suitable-car-list'),
                           data=data)
     assert response.status_code == 200
     assert data['car_model'] in response.data[0]['car_model']
-    dealer_id = suit_cars[2]['car'].dealer.all()[0].id
+    dealer_id = suit_cars['dealer'].pk
     data = {'dealer': dealer_id}
     response = client.get(reverse('suitable-car-list'),
                           data=data)
     assert response.status_code == 200
-    assert data['dealer'] in response.data[0]['dealer']
+    assert data['dealer'] == response.data[0]['dealer']
 
 
 def test_own_suitable_cars_filter(suit_cars, client):
-    user = suit_cars[0]['dealer'].user
+    user = suit_cars['dealer'].user
     client.force_authenticate(user=user)
-    car_model_id = suit_cars[3]['car'].car_model.all()[0].id
+    car_model_id = suit_cars['cars'][2].pk
     data = {'car_model': car_model_id}
     response = client.get(reverse('my-suitable-car-list'),
                           data=data)

@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from random import randint
 
 import pytest
@@ -15,8 +17,9 @@ def test_dealer_can_view_seller_discounts(all_profiles,
     response = client.get(reverse('sellers-discounts-list'))
     assert response.status_code == 200
     assert response.data[0]['purchase_number_discount_map']
+    pk = response.data[0]['id']
     response = client.get(reverse('sellers-discounts-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['purchase_number_discount_map']
 
@@ -29,8 +32,9 @@ def test_dealer_can_view_his_discount_level(all_profiles,
     response = client.get(reverse('my-current-dealer-discounts-list'))
     assert response.status_code == 200
     assert response.data[0]['current_discount']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-current-dealer-discounts-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['current_purchase_number']
 
@@ -43,8 +47,9 @@ def test_seller_can_view_his_current_discounts(all_profiles,
     response = client.get(reverse('my-current-seller-discounts-list'))
     assert response.status_code == 200
     assert response.data[0]['current_discount']
+    pk = response.data[0]['id']
     response = client.get(reverse('my-current-seller-discounts-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['current_purchase_number']
 

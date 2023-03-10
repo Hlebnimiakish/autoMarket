@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import pytest
 from django.urls import reverse
 
@@ -9,8 +11,9 @@ def test_dealer_can_view_buyers_offers(offer, verified_user, client):
     response = client.get(reverse('offer-list'))
     assert response.status_code == 200
     assert response.data[0]['max_price']
+    pk = response.data[0]['id']
     response = client.get(reverse('offer-detail',
-                                  kwargs={'pk': 1}))
+                                  kwargs={'pk': pk}))
     assert response.status_code == 200
     assert response.data['car_model']
 
@@ -40,27 +43,27 @@ def test_buyer_can_create_read_update_delete_his_offer(all_profiles,
     client.force_authenticate(user=user)
     response = client.post(reverse('my-offer-list'),
                            data=offer_data)
-    id = response.data['id']
+    pk = response.data['id']
     assert response.status_code == 201
     assert response.data['max_price']
     response = client.get(reverse('my-offer-list'))
     assert response.status_code == 200
     assert response.data[0]['car_model']
     response = client.get(reverse('my-offer-detail',
-                                  kwargs={"pk": id}))
+                                  kwargs={"pk": pk}))
     assert response.status_code == 200
     assert response.data['creator']
     offer_data['max_price'] = 22222
     response = client.put(reverse('my-offer-detail',
-                                  kwargs={"pk": id}),
+                                  kwargs={"pk": pk}),
                           data=offer_data)
     assert response.status_code == 200
     assert float(response.data['max_price']) == float(22222)
     response = client.delete(reverse('my-offer-detail',
-                                     kwargs={"pk": id}))
+                                     kwargs={"pk": pk}))
     assert response.status_code == 200
     response = client.get(reverse('my-offer-detail',
-                                  kwargs={"pk": id}))
+                                  kwargs={"pk": pk}))
     assert response.status_code == 404
 
 
@@ -75,33 +78,29 @@ def test_other_users_can_not_create_read_update_delete_offer(all_profiles,
             all_profiles['buyer']['profile_instance'].user.id
         response = client.post(reverse('my-offer-list'),
                                data=offer_data)
-        id = offer.pk
+        pk = offer.pk
         assert response.status_code == 403
         response = client.get(reverse('my-offer-list'))
         assert response.status_code == 403
         response = client.get(reverse('my-offer-detail',
-                                      kwargs={"pk": id}))
+                                      kwargs={"pk": pk}))
         assert response.status_code == 403
         offer_data['max_price'] = 22222
         response = client.put(reverse('my-offer-detail',
-                                      kwargs={"pk": id}),
+                                      kwargs={"pk": pk}),
                               data=offer_data)
         assert response.status_code == 403
         response = client.delete(reverse('my-offer-detail',
-                                         kwargs={"pk": id}))
+                                         kwargs={"pk": pk}))
         assert response.status_code == 403
 
 
-@pytest.mark.parametrize('verified_user', ['BUYER'], indirect=True)
-def test_offer_for_dealer_filters(offer, request, verified_user,
+def test_offer_for_dealer_filters(offer, offer_data, additional_profiles,
                                   client, all_profiles):
-    client.force_authenticate(user=verified_user['user_instance'])
-    new_offer = request.getfixturevalue('offer_data')
-    buyer_profile = request.getfixturevalue('buyer_profile')
-    client.post(reverse('buyer-creation'),
-                data=buyer_profile)
+    user = additional_profiles['buyer']['profile_instance'].user
+    client.force_authenticate(user=user)
     client.post(reverse('my-offer-list'),
-                data=new_offer)
+                data=offer_data)
     user = all_profiles['dealer']['profile_instance'].user
     client.force_authenticate(user=user)
     data = {'min_max_price': offer.max_price}
@@ -131,16 +130,12 @@ def test_offer_for_dealer_filters(offer, request, verified_user,
     assert response.data == []
 
 
-@pytest.mark.parametrize('verified_user', ['BUYER'], indirect=True)
-def test_offer_for_dealer_ordering_filters(offer, request, verified_user,
+def test_offer_for_dealer_ordering_filters(offer, additional_profiles, offer_data,
                                            client, all_profiles):
-    client.force_authenticate(user=verified_user['user_instance'])
-    new_offer = request.getfixturevalue('offer_data')
-    buyer_profile = request.getfixturevalue('buyer_profile')
-    client.post(reverse('buyer-creation'),
-                data=buyer_profile)
+    user = additional_profiles['buyer']['profile_instance'].user
+    client.force_authenticate(user=user)
     client.post(reverse('my-offer-list'),
-                data=new_offer)
+                data=offer_data)
     user = all_profiles['dealer']['profile_instance'].user
     client.force_authenticate(user=user)
     data = {'ordering': 'max_price'}

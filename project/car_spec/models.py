@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from car_market.models import BaseCarParametersModel
 from django.db import models
 from django.db.models import (ForeignKey, IntegerField, ManyToManyField,
@@ -11,7 +13,7 @@ class DealerSearchCarSpecificationModel(BaseCarParametersModel):
 
 
 class DealerSuitableCarModel(BaseModel):
-    dealer: ManyToManyField = ManyToManyField('user.AutoDealerModel')
+    dealer: OneToOneField = OneToOneField('user.AutoDealerModel', on_delete=models.CASCADE)
     car_model: ManyToManyField = ManyToManyField('car_market.MarketAvailableCarModel')
 
 

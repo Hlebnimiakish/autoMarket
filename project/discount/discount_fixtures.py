@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals
+
 """This module contains fixtures for discount tests"""
 
 from random import randint
@@ -15,24 +17,27 @@ from .serializers import \
 
 
 @pytest.fixture(scope='function', name='dealers')
-def create_dealers_list(all_profiles, additional_profiles) -> list[AutoDealerModel]:
+def create_dealers_list(all_profiles: dict,
+                        additional_profiles: dict) -> list[AutoDealerModel]:
     """Creates and returns list of dealer profiles from all_profiles
-    and additional_profiles for other fixtures"""
+    and additional_profiles fixtures"""
     return [all_profiles['dealer']['profile_instance'],
             additional_profiles['dealer']['profile_instance']]
 
 
 @pytest.fixture(scope='function', name='sellers')
-def create_sellers_list(all_profiles, additional_profiles) -> list[AutoSellerModel]:
+def create_sellers_list(all_profiles: dict,
+                        additional_profiles: dict) -> list[AutoSellerModel]:
     """Creates and returns list of seller profiles from all_profiles
-    and additional_profiles for other fixtures"""
+    and additional_profiles fixtures"""
     return [all_profiles['seller']['profile_instance'],
             additional_profiles['seller']['profile_instance']]
 
 
 @pytest.fixture(scope='function', name='purchases')
-def create_dealer_purchases(dealers, sellers) -> dict[AutoDealerModel,
-                                                      DealerFromSellerPurchaseNumber]:
+def create_dealer_purchases(dealers: list,
+                            sellers: list) -> dict[AutoDealerModel,
+                                                   DealerFromSellerPurchaseNumber]:
     """Creates db records of dealers purchase number, returns dict of dealer
     profiles with their purchase number records"""
     purchases_list = []
@@ -41,7 +46,7 @@ def create_dealer_purchases(dealers, sellers) -> dict[AutoDealerModel,
         for dealer in dealers:
             purchase_data = {'seller': seller,
                              'dealer': dealer,
-                             'purchase_number': randint(2, 50)}
+                             'purchase_number': randint(2, 45)}
             purchases_list.append(DealerFromSellerPurchaseNumber(**purchase_data))
     purchases_list = DealerFromSellerPurchaseNumber.objects.bulk_create(purchases_list)
     for purchase in purchases_list:
@@ -50,7 +55,7 @@ def create_dealer_purchases(dealers, sellers) -> dict[AutoDealerModel,
 
 
 @pytest.fixture(scope='function', name='discounts')
-def create_seller_discounts(sellers) -> dict[BaseModel, DiscountLevels]:
+def create_seller_discounts(sellers: list) -> dict[BaseModel, DiscountLevels]:
     """Creates db records of sellers discount levels, returns dict of
     seller profiles with their discount records"""
     discounts_list = []
@@ -69,10 +74,10 @@ def create_seller_discounts(sellers) -> dict[BaseModel, DiscountLevels]:
 
 
 @pytest.fixture(scope='function', name='current_levels')
-def create_current_discount_levels(purchases,
-                                   discounts,
-                                   sellers,
-                                   dealers) -> dict[CharField, CurrentDiscount]:
+def create_current_discount_levels(purchases: dict,
+                                   discounts: dict,
+                                   sellers: list,
+                                   dealers: list) -> dict[CharField, CurrentDiscount]:
     """Creates db records of current dealers discount level, returns dict of
     dealer profile names with their current discount level records"""
     discounts_map = {}

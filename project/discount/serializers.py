@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from rest_framework.serializers import (CharField, DictField, ModelSerializer,
                                         ValidationError)
 
@@ -10,7 +12,7 @@ class RegularCustomerDiscountLevelsSerializer(ModelSerializer):
 
     class Meta:
         model = RegularCustomerDiscountLevelsModel
-        fields = ['seller', 'purchase_number_discount_map']
+        fields = ['id', 'seller', 'purchase_number_discount_map']
         read_only_fields = ['is_active', 'seller']
 
     def validate_purchase_number_discount_map(self, discount_map):
@@ -32,7 +34,7 @@ class CurrentDiscountLevelPerDealerSerializer(ModelSerializer):
 
     class Meta:
         model = CurrentDiscountLevelPerDealerModel
-        fields = ['seller_name', 'dealer_name',
+        fields = ['id', 'seller_name', 'dealer_name',
                   'current_discount', 'current_purchase_number']
         read_only_fields = ['seller_name', 'dealer_name',
                             'current_discount', 'current_purchase_number']

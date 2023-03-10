@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import pytest
 from django.urls import reverse
 
@@ -12,8 +14,9 @@ def test_all_users_can_view_dealer_promos(all_users,
         response = client.get(reverse('dealer-promo-list'))
         assert response.status_code == 200
         assert response.data[0]['discount_size']
+        pk = response.data[0]['id']
         response = client.get(reverse('dealer-promo-detail',
-                                      kwargs={'pk': 1}))
+                                      kwargs={'pk': pk}))
         assert response.status_code == 200
         assert response.data['promo_cars']
 
@@ -26,8 +29,9 @@ def test_dealers_and_sellers_can_view_seller_promos(all_users,
         response = client.get(reverse('seller-promo-list'))
         assert response.status_code == 200
         assert response.data[0]['discount_size']
+        pk = response.data[0]['id']
         response = client.get(reverse('seller-promo-detail',
-                                      kwargs={'pk': 1}))
+                                      kwargs={'pk': pk}))
         assert response.status_code == 200
         assert response.data['promo_cars']
 
