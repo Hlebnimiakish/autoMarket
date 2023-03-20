@@ -25,6 +25,8 @@ class RegularCustomerDiscountLevelsSerializer(ModelSerializer):
         for value in discount_map.values():
             if not isinstance(value, int):
                 raise ValidationError("Discount size must be integer: <integer value>")
+            if value > 100:
+                raise ValidationError("Discount can't be more than 100%")
         return discount_map
 
 
