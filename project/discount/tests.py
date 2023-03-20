@@ -100,6 +100,10 @@ def test_seller_can_not_create_discount_levels_with_incorrect_data(all_profiles,
     response = client.post(reverse("create-discount-levels"),
                            data={'purchase_number_discount_map': discount_map})
     assert response.status_code == 400
+    discount_map = {"500": 101}
+    response = client.post(reverse("create-discount-levels"),
+                           data={'purchase_number_discount_map': discount_map})
+    assert response.status_code == 400
 
 
 def test_seller_can_read_update_delete_his_discount_levels(all_profiles,
