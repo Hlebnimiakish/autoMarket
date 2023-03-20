@@ -20,3 +20,4 @@ class DealerSuitableCarModel(BaseModel):
 class DealerSuitableSellerModel(BaseModel):
     dealer: OneToOneField = OneToOneField('user.AutoDealerModel', on_delete=models.CASCADE)
     suitable_seller: ManyToManyField = ManyToManyField('user.AutoSellerModel')
+    deal_car_models: ManyToManyField = ManyToManyField('car_market.MarketAvailableCarModel')
