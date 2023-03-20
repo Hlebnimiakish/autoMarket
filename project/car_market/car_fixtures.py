@@ -12,7 +12,7 @@ def create_cars() -> list[MarketAvailableCarModel]:
     """Creates definite number of db records of market available
     cars and returns list of created car instances"""
     cars_data = []
-    for _ in range(10):
+    for _ in range(10000):
         car_data = {
             "brand_name": choice(['Mesla', 'PulseWagen', 'Meely', 'Konda',
                                   'Pissan', 'Laudi', 'Koyota', 'Peat']),

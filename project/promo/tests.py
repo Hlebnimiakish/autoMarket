@@ -83,6 +83,32 @@ def test_dealer_and_seller_can_create_read_update_delete_his_promo(all_profiles,
         assert response.status_code == 404
 
 
+def test_dealer_and_seller_can_not_create_update_his_promo_with_invalid_data(all_profiles,
+                                                                             promo_data,
+                                                                             car_parks,
+                                                                             client):
+    for user_type, aim in {'dealer': 'buyer',
+                           'seller': 'dealer'}.items():
+        client.force_authenticate(all_profiles[str(user_type)]['profile_instance'].user)
+        promo_data['creator'] = all_profiles[str(user_type)]['profile_instance'].pk
+        promo_data['promo_cars'] = [car_parks[f'{user_type}_park'].pk]
+        promo_data['promo_aims'] = [all_profiles[str(aim)]['profile_instance'].pk]
+        promo_data['discount_size'] = 150
+        response = client.post(reverse(f'my-{user_type}-promo-list'),
+                               data=promo_data)
+        assert response.status_code == 400
+        promo_data['discount_size'] = 25
+        response = client.post(reverse(f'my-{user_type}-promo-list'),
+                               data=promo_data)
+        assert response.status_code == 201
+        id = response.data['id']
+        promo_data['discount_size'] = 200
+        response = client.put(reverse(f'my-{user_type}-promo-detail',
+                                      kwargs={'pk': id}),
+                              data=promo_data)
+        assert response.status_code == 400
+
+
 def test_seller_and_buyer_can_not_create_read_update_delete_dealer_promo(all_profiles,
                                                                          promo_data,
                                                                          dealer_promo,

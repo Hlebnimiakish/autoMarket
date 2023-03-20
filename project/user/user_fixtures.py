@@ -141,7 +141,8 @@ def create_dealer_profile_data() -> dict:
     """Creates and returns a dict of required dealer profile data"""
     dealer_profile_data = {
         "name": f"tdealer{uuid.uuid4().hex}",
-        "home_country": "AL"
+        "home_country": "AL",
+        "balance": 100000
     }
     return dealer_profile_data
 
@@ -162,7 +163,8 @@ def create_buyer_profile_data() -> dict:
     buyer_profile_data = {
         "firstname": f"tbuyer{uuid.uuid4().hex}",
         "lastname": f"tbuyer{uuid.uuid4().hex}",
-        "drivers_license_number": str(uuid.uuid4().hex)
+        "drivers_license_number": str(uuid.uuid4().hex),
+        "balance": 100000
     }
     return buyer_profile_data
 
@@ -177,7 +179,8 @@ def create_additional_profiles() -> dict[str, dict[str,
     dict of user_types and their created profile instance and it's creation data"""
     dealer_profile_data = {
         "name": f"tdealer{uuid.uuid4().hex}",
-        "home_country": "AL"
+        "home_country": "AL",
+        "balance": 100000
     }
     seller_profile_data = {
         "name": f"tseller{uuid.uuid4().hex}",
@@ -186,7 +189,8 @@ def create_additional_profiles() -> dict[str, dict[str,
     buyer_profile_data = {
         "firstname": f"tbuyer{uuid.uuid4().hex}",
         "lastname": f"tbuyer{uuid.uuid4().hex}",
-        "drivers_license_number": str(uuid.uuid4().hex)
+        "drivers_license_number": str(uuid.uuid4().hex),
+        "balance": 100000
     }
     profiles = {"DEALER": dealer_profile_data,
                 "SELLER": seller_profile_data,
