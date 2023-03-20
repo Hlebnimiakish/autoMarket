@@ -1,10 +1,44 @@
+# pylint: disable=duplicate-code
+
 """This module contains fixtures for offer tests"""
 
+import uuid
+from decimal import Decimal
 from random import choice, randint
 
 import pytest
+from pytest import FixtureRequest
+from rest_framework.test import APIClient
+from user.models import CarBuyerModel, CustomUserModel
 
 from .models import OfferModel
+
+
+@pytest.fixture(scope='function', name='not_rich_buyer')
+def create_buyer_with_low_balance(request: FixtureRequest,
+                                  client: APIClient) -> CarBuyerModel:
+    """Creates and returns a buyer profile with passed balance,
+    also authenticate created buyer"""
+    password = uuid.uuid4().hex
+    filler = uuid.uuid4().hex
+    user_data = {
+        "username": f"test{filler}",
+        "password": f"pass{password}",
+        "email": f"test{filler}@am.com",
+        "user_type": "BUYER",
+        "is_verified": True
+    }
+    user = CustomUserModel.objects.create_user(**user_data)
+    buyer_profile_data = {
+        "firstname": f"tbuyer{uuid.uuid4().hex}",
+        "lastname": f"tbuyer{uuid.uuid4().hex}",
+        "drivers_license_number": str(uuid.uuid4().hex),
+        "balance": Decimal(request.param),
+        "user": user
+    }
+    buyer = CarBuyerModel.objects.create(**buyer_profile_data)
+    client.force_authenticate(user=user)
+    return buyer
 
 
 @pytest.fixture(scope='function', name='offer_data')
