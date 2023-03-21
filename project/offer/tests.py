@@ -67,6 +67,25 @@ def test_buyer_can_create_read_update_delete_his_offer(all_profiles,
     assert response.status_code == 404
 
 
+@pytest.mark.parametrize('not_rich_buyer', ['1000'], indirect=True)
+def test_buyer_can_not_create_update_offer_with_invalid_data(not_rich_buyer,
+                                                             offer_data,
+                                                             client):
+    response = client.post(reverse('my-offer-list'),
+                           data=offer_data)
+    assert response.status_code == 400
+    offer_data['max_price'] = 999
+    response = client.post(reverse('my-offer-list'),
+                           data=offer_data)
+    pk = response.data['id']
+    assert response.status_code == 201
+    offer_data['max_price'] = 5000
+    response = client.put(reverse('my-offer-detail',
+                                  kwargs={"pk": pk}),
+                          data=offer_data)
+    assert response.status_code == 400
+
+
 def test_other_users_can_not_create_read_update_delete_offer(all_profiles,
                                                              offer_data,
                                                              offer,
