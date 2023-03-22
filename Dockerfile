@@ -12,4 +12,3 @@ COPY Pipfile Pipfile.lock /auto_market/
 RUN pipenv install --dev --system --deploy --ignore-pipfile
 
 COPY project /auto_market/
-
