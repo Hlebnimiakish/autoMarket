@@ -37,7 +37,8 @@ class OfferCRUDView(BaseCRUDView):
         serialized_obj = self.serializer(data=request.data, context=user_data)
         serialized_obj.is_valid(raise_exception=True)
         new_offer = serialized_obj.save(**user_data)
-        task_make_deal_from_offer.apply_async(new_offer, countdown=5)
+        offer_data = self.serializer(new_offer).data
+        task_make_deal_from_offer.apply_async([offer_data], countdown=5)
         return Response(serialized_obj.data, status=status.HTTP_201_CREATED)
 
     def update(self, request: CustomRequest, pk: int) -> Response:
@@ -48,6 +49,7 @@ class OfferCRUDView(BaseCRUDView):
                                              context=user_data,
                                              instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
-        updated_offer = serialized_new_obj.save()
-        task_make_deal_from_offer.apply_async(updated_offer, countdown=5)
+        offer = serialized_new_obj.save()
+        offer_data = self.serializer(offer).data
+        task_make_deal_from_offer.apply_async([offer_data], countdown=5)
         return Response(serialized_new_obj.data)

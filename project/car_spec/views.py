@@ -35,7 +35,8 @@ class DealerSearchCarSpecificationCreateView(CreateModelMixin,
     def perform_create(self, serializer) -> None:
         user = self.request.user
         spec = serializer.save(dealer=AutoDealerModel.objects.get(user=user))
-        task_find_suit_cars_for_dealer.apply_async(spec, countdown=5)
+        spec_data = DealerSearchCarSpecificationsSerializer(spec).data
+        task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
 
     def post(self, request: CustomRequest, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -55,7 +56,8 @@ class DealerSearchCarSpecificationRUDView(BaseOwnModelRUDView):
                                              instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
         spec = serialized_new_obj.save()
-        task_find_suit_cars_for_dealer.apply_async(spec, countdown=5)
+        spec_data = self.serializer(spec).data
+        task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
         return Response(serialized_new_obj.data)
 
 
