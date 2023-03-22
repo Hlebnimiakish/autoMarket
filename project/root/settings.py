@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django_filters',
     'debug_toolbar',
     'celery',
-    'django_celery_beat',
+    'django_celery_results',
 
     "user",
     "car_park",
@@ -174,3 +174,11 @@ if DEBUG:
     import socket
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+
+CELERY_RESULT_BACKEND = os.getenv('RESULT_BACKEND')
+
+CELERY_BROKER_URL = os.getenv('BROKER_URL')
+
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_RESULT_SERIALIZER = 'json'

@@ -11,7 +11,7 @@ class MarkerAvailableCarsModelSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class MarketAvailableCarsModelSomeFielsSerializer(ModelSerializer):
+class MarketAvailableCarsModelSomeFieldsSerializer(ModelSerializer):
     class Meta:
         model = MarketAvailableCarModel
         fields = ['id', 'transmission', 'body_type', 'engine_fuel_type',

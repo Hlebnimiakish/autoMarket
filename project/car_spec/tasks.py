@@ -5,8 +5,8 @@ from decimal import Decimal
 
 from car_market.models import MarketAvailableCarModel
 from car_park.models import SellerCarParkModel
+from celery import shared_task
 from discount.models import RegularCustomerDiscountLevelsModel
-from root.celery import app
 from user.models import AutoDealerModel, DealerFromSellerPurchaseNumber
 
 from .models import (DealerSearchCarSpecificationModel, DealerSuitableCarModel,
@@ -15,7 +15,7 @@ from .serializers import (DealerSearchCarSpecificationEstFieldsSerializer,
                           DealerSuitableCarModelsSerializer)
 
 
-@app.tasks
+@shared_task(name='find_dealers_suit_cars')
 def task_find_suit_cars_for_all_dealers():
     """Celery script that checks all dealer specifications parameters,
     finds suitable car models and adds suitable cars to corresponding model"""
@@ -41,13 +41,12 @@ def task_find_suit_cars_for_all_dealers():
         suit_cars.car_model.add(*cars)
 
 
-@app.tasks
-def task_find_suit_cars_for_dealer(spec: DealerSearchCarSpecificationModel):
+@shared_task(name='find_suit_cars_for_dealer')
+def task_find_suit_cars_for_dealer(spec_data: dict):
     """Celery script that takes specification model, checks it's parameters,
     finds suitable car models and adds suitable cars to corresponding model"""
-    dealer = spec.dealer
-    spec_data = DealerSearchCarSpecificationEstFieldsSerializer(spec).data
-    suit_cars = DealerSuitableCarModel.objects.get_or_create(dealer=dealer)[0]
+    dealer_id = spec_data['dealer']
+    suit_cars = DealerSuitableCarModel.objects.get_or_create(dealer_id=dealer_id)[0]
     suit_cars.car_model.clear()
     str_list = ['transmission', 'body_type', 'engine_fuel_type', 'drive_unit', 'color']
     bool_params = ["safe_controls", "parking_help", "climate_controls",
@@ -158,7 +157,7 @@ def suitable_seller_with_suitable_cars_adder(deals: list[dict],
     suit_seller.deal_car_models.add(*deal_car_models)
 
 
-@app.tasks
+@shared_task(name='find_suit_sellers_for_dealers')
 def task_find_suitable_sellers():
     """Celery script that checks all suitable within dealer car specification parameters
     cars and adds suitable (which makes the best possible deals) for dealer

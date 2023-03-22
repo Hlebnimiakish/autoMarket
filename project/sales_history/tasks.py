@@ -7,12 +7,12 @@ from car_park.models import DealerCarParkModel, SellerCarParkModel
 from car_spec.models import DealerSuitableCarModel, DealerSuitableSellerModel
 from car_spec.serializers import (DealerSuitableCarModelsSerializer,
                                   DealerSuitableSellerSerializer)
+from celery import shared_task
 from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from promo.models import SellerPromoModel
 from promo.serializers import SellersPromoSerializer
-from root.celery import app
 from user.models import AutoDealerModel
 
 from .models import SellerSalesHistoryModel
@@ -98,7 +98,7 @@ def make_a_deal_and_create_dealer_park(chosen_deal: dict,
                                                    chosen_deal['price'])
 
 
-@app.tasks
+@shared_task(name='purchase_cars_for_dealers')
 def task_dealer_cars_purchase():
     """Celery script that checks car market for all dealers having suitable cars/sellers model
     filled and makes best precalculated deals (of cars purchase) if there are some taking in

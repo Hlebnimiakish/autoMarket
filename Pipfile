@@ -11,7 +11,7 @@ psycopg2-binary = "*"
 djangorestframework-simplejwt = "*"
 django-filter = "*"
 celery = "*"
-django-celery-beat = "*"
+redis = "*"
 
 [dev-packages]
 pylint = "*"
@@ -26,6 +26,7 @@ django-rest-swagger = "*"
 drf-yasg = "*"
 pytest-django = "*"
 django-debug-toolbar = "*"
+django-celery-results = "*"
 
 [requires]
 python_version = "3.10"
