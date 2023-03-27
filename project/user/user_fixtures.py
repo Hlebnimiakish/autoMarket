@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, duplicate-code
 
 """This module contains fixtures for user tests"""
 
@@ -13,12 +13,6 @@ from .models import (AutoDealerModel, AutoSellerModel, CarBuyerModel,
                      CustomUserModel)
 from .serializers import (AutoDealerSerializer, AutoSellerSerializer,
                           CarBuyerSerializer, CustomUserRUDSerializer)
-
-
-@pytest.fixture(scope='session', name='client', autouse=True)
-def get_client() -> APIClient:
-    """Creates an instance of Django APIClient for tests"""
-    return APIClient()
 
 
 @pytest.fixture(scope='function')
