@@ -98,7 +98,7 @@ def create_dealers_for_control_cases() -> list[AutoDealerModel]:
 
 
 @pytest.fixture(scope='function', name='control_case_suit_cars_for_dealer')
-def create_control_cases_of_dealer_and_their_spec_suit_cars(dealers_for_control_cases) \
+def create_control_cases_of_dealer_and_their_spec_suit_cars(dealers_for_control_cases: list) \
         -> dict[str, dict[str, int] | list[int]]:
     """Creates dealer car specifications for passed in dealers and cars, some of which
     can and some can not match created specification parameters for celery task tests
@@ -309,7 +309,7 @@ def create_control_cases_of_dealer_and_their_spec_suit_cars(dealers_for_control_
 
 
 @pytest.fixture(scope='function', name='control_case_suit_seller')
-def create_control_case_of_suit_sellers_for_dealers(control_case_suit_cars_for_dealer) \
+def create_control_case_of_suit_sellers_for_dealers(control_case_suit_cars_for_dealer: dict) \
         -> dict[str, AutoSellerModel | int | MarketAvailableCarModel]:
     """Creates user and seller instances, their car parks and discount with cars, suitable
     for created dealers for celery task tests purposes, returns dict with predefined suitable
