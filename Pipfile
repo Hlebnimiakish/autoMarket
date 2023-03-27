@@ -27,6 +27,7 @@ drf-yasg = "*"
 pytest-django = "*"
 django-debug-toolbar = "*"
 django-celery-results = "*"
+pytest-celery = "*"
 
 [requires]
 python_version = "3.10"

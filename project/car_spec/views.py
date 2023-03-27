@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.response import Response
+from root.celery import app as celery_app
 from root.common.permissions import (CurrentDealerHasNoSpec, IsDealer,
                                      IsOwnerOrAdmin, IsSeller, IsVerified)
 from root.common.views import (BaseOwnModelReadView, BaseOwnModelRUDView,
@@ -35,8 +36,9 @@ class DealerSearchCarSpecificationCreateView(CreateModelMixin,
     def perform_create(self, serializer) -> None:
         user = self.request.user
         spec = serializer.save(dealer=AutoDealerModel.objects.get(user=user))
-        spec_data = DealerSearchCarSpecificationsSerializer(spec).data
-        task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
+        if celery_app.control.inspect().active():
+            spec_data = DealerSearchCarSpecificationsSerializer(spec).data
+            task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
 
     def post(self, request: CustomRequest, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -56,8 +58,9 @@ class DealerSearchCarSpecificationRUDView(BaseOwnModelRUDView):
                                              instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
         spec = serialized_new_obj.save()
-        spec_data = self.serializer(spec).data
-        task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
+        if celery_app.control.inspect().active():
+            spec_data = self.serializer(spec).data
+            task_find_suit_cars_for_dealer.apply_async([spec_data], countdown=5)
         return Response(serialized_new_obj.data)
 
 
