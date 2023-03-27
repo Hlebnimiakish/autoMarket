@@ -96,14 +96,14 @@ def deal_sum_calculator(discount_map: dict, current_purchase_number: int,
     price of the estimating car and returns value of the potential car purchase deal"""
     purchase_map = purchase_map_creator(discount_map, current_purchase_number)
     deal_sum = Decimal()
-    for level in list(purchase_map.keys()):
-        if level in list(discount_map.keys()):
+    for level, value in purchase_map.items():
+        if str(level) in list(discount_map.keys()):
             deal_sum = \
                 deal_sum + Decimal(car_price) * \
-                (100 - discount_map[str(level)]) / 100 * purchase_map[level]
+                (100 - discount_map[str(level)]) / 100 * value
         else:
             deal_sum = \
-                deal_sum + Decimal(car_price) * purchase_map[level]
+                deal_sum + Decimal(car_price) * value
     return deal_sum
 
 
