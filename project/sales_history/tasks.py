@@ -29,10 +29,10 @@ def selected_and_promo_car_prices_collector(promos: QuerySet[SellerPromoModel],
     car_prices = []
     for promo in promos:
         promo_data = SellersPromoSerializer(promo).data
-        promo_discount = promo_data['discount_size']
+        promo_discount = Decimal(promo_data['discount_size'])
         promo_car_parks = [SellerCarParkModel.objects.get(id=car_park_id) for car_park_id
                            in promo_data["promo_cars"] if
-                           SellerCarParkModel.objects.get(id=car_park_id).car_model
+                           SellerCarParkModel.objects.get(id=car_park_id).car_model.pk
                            in suitable_cars]
         for park in promo_car_parks:
             car_prices.append({'car_park': park,

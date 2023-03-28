@@ -45,12 +45,14 @@ def find_best_park_by_price_from_suitable_car_parks(buyer: CarBuyerModel,
         promo_parks_list = []
         for park in suitable_car_parks_list:
             for promo in promos:
-                actual_price = Decimal(park.car_price) * Decimal(promo.discount_size)
-                if park in DealersPromoSerializer(promo).data['promo_aims'] and \
-                        actual_price <= offer_price:
-                    promo_parks_list.append(park)
-                    car_park_prices_with_promo.append({"park": park,
-                                                       "actual_price": actual_price})
+                promo_cars = DealersPromoSerializer(promo).data['promo_cars']
+                if park.pk in promo_cars:
+                    actual_price = Decimal(park.car_price) * \
+                                   (100 - Decimal(promo.discount_size)) / 100
+                    if actual_price <= offer_price:
+                        promo_parks_list.append(park)
+                        car_park_prices_with_promo.append({"park": park,
+                                                           "actual_price": actual_price})
         car_park_prices_without_promo = [{"park": park,
                                           "actual_price": Decimal(park.car_price)}
                                          for park in suitable_car_parks_list

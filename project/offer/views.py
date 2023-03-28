@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.response import Response
+from root.celery import app as celery_app
 from root.common.permissions import (IsBuyer, IsDealer, IsOwnerOrAdmin,
                                      IsVerified)
 from root.common.views import BaseCRUDView, BaseReadOnlyView, CustomRequest
@@ -37,8 +38,9 @@ class OfferCRUDView(BaseCRUDView):
         serialized_obj = self.serializer(data=request.data, context=user_data)
         serialized_obj.is_valid(raise_exception=True)
         new_offer = serialized_obj.save(**user_data)
-        offer_data = self.serializer(new_offer).data
-        task_make_deal_from_offer.apply_async([offer_data], countdown=5)
+        if celery_app.control.inspect().active():
+            offer_data = self.serializer(new_offer).data
+            task_make_deal_from_offer.apply_async([offer_data], countdown=5)
         return Response(serialized_obj.data, status=status.HTTP_201_CREATED)
 
     def update(self, request: CustomRequest, pk: int) -> Response:
@@ -50,6 +52,7 @@ class OfferCRUDView(BaseCRUDView):
                                              instance=obj)
         serialized_new_obj.is_valid(raise_exception=True)
         offer = serialized_new_obj.save()
-        offer_data = self.serializer(offer).data
-        task_make_deal_from_offer.apply_async([offer_data], countdown=5)
+        if celery_app.control.inspect().active():
+            offer_data = self.serializer(offer).data
+            task_make_deal_from_offer.apply_async([offer_data], countdown=5)
         return Response(serialized_new_obj.data)

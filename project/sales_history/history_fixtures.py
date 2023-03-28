@@ -1,10 +1,17 @@
 """This module contains fixtures for sales_history tests"""
 
-from datetime import date
+import uuid
+from datetime import date, timedelta
 from random import choice, randint
 
 import pytest
 from car_park.models import DealerCarParkModel, SellerCarParkModel
+from car_spec.tasks import (task_find_suit_cars_for_all_dealers,
+                            task_find_suitable_sellers)
+from django.utils import timezone
+from promo.models import SellerPromoModel
+from pytest import FixtureRequest
+from user.models import AutoDealerModel
 
 from .models import (BaseSalesHistoryModel, CarBuyerHistoryModel,
                      DealerSalesHistoryModel, SellerSalesHistoryModel)
@@ -152,3 +159,33 @@ def create_additional_buyer_history_record(all_profiles: dict,
     record_data = CarBuyersHistorySerializer(record).data
     return {"record_data": record_data,
             "record_instance": record}
+
+
+@pytest.fixture(scope='function', name='deals_preparations')
+def prepare_dealers_for_car_purchase_deals(seller_promos: FixtureRequest):
+    """Calls tasks for suitable cars and sellers to be found, for created dealers to
+    be ready to participate in car purchase deals for celery tasks test purposes"""
+    task_find_suit_cars_for_all_dealers()
+    task_find_suitable_sellers()
+    return seller_promos
+
+
+@pytest.fixture(scope='function', name='seller_promos')
+def create_seller_promos(control_case_suit_seller: dict):
+    """Creates seller promo instances, for celery tasks test
+    purposes, do not return values, just fills up the database"""
+    dealer_ids = AutoDealerModel.objects.values_list('id', flat=True)
+    seller_id = control_case_suit_seller['unsuit_sellers'][0]
+    promo_data = {
+        "promo_name": f"promo{uuid.uuid4().hex}",
+        "promo_description": "This promo is a test promo",
+        "start_date": timezone.now(),
+        "end_date": (timezone.now() + timedelta(days=5)),
+        "discount_size": 25,
+        "creator_id": seller_id
+    }
+    seller_promo = SellerPromoModel.objects.create(**promo_data)
+    seller_promo.promo_aims.add(*dealer_ids)
+    car_parks = SellerCarParkModel.objects.get(seller_id=seller_id).pk
+    seller_promo.promo_cars.add(car_parks)
+    return control_case_suit_seller
