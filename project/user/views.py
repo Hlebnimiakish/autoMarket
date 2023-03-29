@@ -1,10 +1,15 @@
 # mypy: disable-error-code=override
+# pylint: skip-file
 
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status
 from rest_framework.mixins import CreateModelMixin
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from root.common.permissions import (IsBuyer, IsDealer, IsNewUser,
@@ -20,6 +25,53 @@ from .serializers import (AutoDealerFrontSerializer, AutoDealerSerializer,
                           AutoSellerFrontSerializer, AutoSellerSerializer,
                           CarBuyerFrontSerializer, CarBuyerSerializer,
                           CustomUserRUDSerializer, CustomUserSerializer)
+
+
+def token_link_generator(user: CustomUserModel, request: CustomRequest,
+                         url_name: str, token_name_prefix: str) -> str:
+    """Generates and returns link for user to go to perform special actions
+    requiring additional token verification"""
+    generate_token = default_token_generator.make_token(user=user)
+    host = request.get_host()
+    token_link = \
+        f'{host}{reverse(url_name)}?user_id={user.pk}' \
+        f'&{token_name_prefix}_token={generate_token}'
+    return token_link
+
+
+def user_verification_mail_sender(user: CustomUserModel,
+                                  request: CustomRequest):
+    """Sends email with generated special link to perform requested user
+    verification with email confirmation"""
+    action_type = 'verification'
+    verification_link = \
+        token_link_generator(user, request, action_type, action_type)
+    send_mail('Auto market user verification email',
+              f'\nHello, {user.username}.'
+              f'\nWe are glad to greet you at our auto market app.'
+              f'\nPlease, verify your email by the next link:'
+              f'\n{verification_link}'
+              f'\nThank you for joining us!',
+              'auto_market@email.com',
+              [f'{user.email}'],
+              fail_silently=False)
+
+
+def password_reset_mail_sender(user: CustomUserModel, request: CustomRequest):
+    """Sends email with generated special link to perform requested user
+    password change with email confirmation"""
+    password_reset_link = \
+        token_link_generator(user, request, 'password-reset', 'password_reset')
+    send_mail('Auto market password reset email',
+              f'\nHello, {user.username}.'
+              f'\nWe have got your password reset request.'
+              f'\nPlease, follow the link to set a new password:'
+              f'\n{password_reset_link}'
+              f'\nIf u have not sent any password reset requests just ignore this email.'
+              f'\nThank you!',
+              'auto_market@email.com',
+              [f'{user.email}'],
+              fail_silently=False)
 
 
 class BaseOwnProfileRUDView(BaseOwnModelRUDView):
@@ -58,6 +110,7 @@ class CustomUserCreationView(APIView):
             return Response(data=password_errors)
         created_user = self.model.objects.create_user(**request.data)
         new_serialized_user = self.serializer(created_user)
+        user_verification_mail_sender(created_user, request)
         return Response(new_serialized_user.data, status=status.HTTP_201_CREATED)
 
     def get_serializer(self):
@@ -69,16 +122,25 @@ class CustomUserCreationView(APIView):
 
 
 class UserVerificationView(APIView):
-    # This View probably will be changed in future
-    # (when definite verification method will be picked)
+    permission_classes = [AllowAny]
 
-    def put(self, request):
-        user_id = request.data['user_id']
-        user = CustomUserModel.objects.get(id=user_id)
-        user.is_verified = True
-        user.save()
-        serialized_upd_user = CustomUserSerializer(user)
-        return Response(serialized_upd_user.data, status=status.HTTP_200_OK)
+    def get(self, request: CustomRequest):
+        user_id = request.query_params.get('user_id', None)
+        verification_token = request.query_params.get('verification_token', None)
+        if user_id and verification_token:
+            try:
+                user = CustomUserModel.objects.get(id=user_id)
+            except CustomUserModel.DoesNotExist:
+                return Response('User not found', status=status.HTTP_404_NOT_FOUND)
+            if default_token_generator.check_token(user, verification_token):
+                user.is_verified = True
+                user.save()
+                serialized_upd_user = CustomUserSerializer(user)
+                return Response(serialized_upd_user.data, status=status.HTTP_200_OK)
+            return Response('Given token is invalid or out of date.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response('User id or verification token was not provided',
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class SelfUserProfileRUDView(BaseOwnModelRUDView):
@@ -90,6 +152,55 @@ class SelfUserProfileRUDView(BaseOwnModelRUDView):
     def profile_getter(self, request: CustomRequest) -> int:
         id = request.user.pk
         return id
+
+
+class UserPasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request: CustomRequest):
+        email = str(request.data.get('email'))
+        try:
+            user = CustomUserModel.objects.get(email=email)
+            password_reset_mail_sender(user, request)
+            return Response('Password reset link have been sent to given email',
+                            status=status.HTTP_200_OK)
+        except CustomUserModel.DoesNotExist:
+            return Response("User with given email wasn't found",
+                            status=status.HTTP_404_NOT_FOUND)
+
+
+class UserPasswordResetView(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request: CustomRequest):
+        user_id = request.query_params.get('user_id', None)
+        password_reset_token = request.query_params.get('password_reset_token', None)
+        if user_id and password_reset_token:
+            try:
+                user = CustomUserModel.objects.get(id=user_id)
+            except CustomUserModel.DoesNotExist:
+                return Response('User not found', status=status.HTTP_404_NOT_FOUND)
+            if default_token_generator.check_token(user, password_reset_token):
+                old_password = str(request.data.get('old_password'))
+                new_password = str(request.data.get('new_password'))
+                if user.check_password(old_password):
+                    try:
+                        validate_password(password=new_password)
+                    except ValidationError as ve:
+                        password_errors = dict()
+                        password_errors['password'] = ve
+                        return Response(data=password_errors,
+                                        status=status.HTTP_400_BAD_REQUEST)
+                    user.set_password(new_password)
+                    user.save()
+                    return Response('Password was successfully changed!',
+                                    status=status.HTTP_200_OK)
+                return Response('Given old password is incorrect',
+                                status=status.HTTP_400_BAD_REQUEST)
+            return Response('Given token is invalid or out of date.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response('User id or password reset token was not provided',
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class AutoDealerReadOnlyView(BaseReadOnlyView):

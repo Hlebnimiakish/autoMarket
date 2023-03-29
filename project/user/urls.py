@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from django.urls import include, path
 from rest_framework import routers
 from rest_framework_simplejwt.views import (TokenObtainPairView,
@@ -8,6 +10,7 @@ from .views import (AutoDealerCreateView, AutoDealerReadOnlyView,
                     AutoSellerReadOnlyView, AutoSellerRUDView,
                     CarBuyerCreateView, CarBuyerReadOnlyView, CarBuyerRUDView,
                     CustomUserCreationView, SelfUserProfileRUDView,
+                    UserPasswordResetRequestView, UserPasswordResetView,
                     UserVerificationView)
 
 profile_RO_router = routers.DefaultRouter()
@@ -31,6 +34,12 @@ urlpatterns = [
     path('verification/',
          UserVerificationView.as_view(),
          name='verification'),
+    path('request_password_reset/',
+         UserPasswordResetRequestView.as_view(),
+         name='password-reset-request'),
+    path('password_reset/',
+         UserPasswordResetView.as_view(),
+         name='password-reset'),
     path('create_dealer_profile/',
          AutoDealerCreateView.as_view(),
          name='dealer-creation'),

@@ -4,7 +4,12 @@ import uuid
 from random import choice
 
 import pytest
+from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
+from root.common.views import CustomRequest
+
+from .models import CustomUserModel
+from .views import token_link_generator
 
 pytestmark = pytest.mark.django_db
 
@@ -70,11 +75,119 @@ def test_inactive_user_can_not_login_and_refresh(user_data, client):
                          [choice(['DEALER', 'SELLER', 'BUYER'])],
                          indirect=True)
 def test_user_can_be_verified(unverified_user, client):
-    id_data = {'user_id': unverified_user['created_user_data']['id']}
-    response = client.put(reverse("verification"),
-                          data=id_data)
+    action_type = 'verification'
+    verification_link = \
+        token_link_generator(unverified_user['user_instance'],
+                             CustomRequest,
+                             action_type,
+                             action_type)
+    response = client.get(verification_link)
     assert response.status_code == 200
     assert response.data['is_verified']
+
+
+@pytest.mark.parametrize('unverified_user',
+                         [choice(['DEALER', 'SELLER', 'BUYER'])],
+                         indirect=True)
+def test_user_can_not_be_verified_with_invalid_data(unverified_user,
+                                                    client):
+    user = unverified_user['user_instance']
+    token = default_token_generator.make_token(user=user)
+    verification_link = f'{reverse("verification")}?user_id=999222333&verification_token=xxx'
+    response = client.get(verification_link)
+    assert response.status_code == 404
+    verification_link = f'{reverse("verification")}?user_id=999222333&verification_token={token}'
+    response = client.get(verification_link)
+    assert response.status_code == 404
+    verification_link = f'{reverse("verification")}?user_id={user.pk}&verification_token=xxx'
+    response = client.get(verification_link)
+    assert response.status_code == 400
+    verification_link = f'{reverse("verification")}?user_id={user.pk}'
+    response = client.get(verification_link)
+    assert response.status_code == 400
+    verification_link = f'{reverse("verification")}?verification_token={token}'
+    response = client.get(verification_link)
+    assert response.status_code == 400
+
+
+@pytest.mark.parametrize('user_data',
+                         [choice(['DEALER', 'SELLER', 'BUYER'])],
+                         indirect=True)
+def test_user_can_reset_password(user_data, client):
+    client.post(reverse("registration"), data=user_data)
+    email = user_data['email']
+    old_password = user_data['password']
+    reset_request_data = {"email": email}
+    response = client.put(reverse('password-reset-request'),
+                          data=reset_request_data)
+    assert response.status_code == 200
+    user = CustomUserModel.objects.get(email=email)
+    password_reset_link = token_link_generator(user,
+                                               CustomRequest,
+                                               'password-reset',
+                                               'password_reset')
+    new_password = "testpass12345"
+    password_reset_data = {"old_password": old_password,
+                           "new_password": new_password}
+    response = client.put(password_reset_link,
+                          data=password_reset_data)
+    assert response.status_code == 200
+    user_data['password'] = new_password
+    response = client.post(reverse("get-token"),
+                           data=user_data)
+    assert response.status_code == 200
+    assert response.data['access']
+
+
+@pytest.mark.parametrize('user_data',
+                         [choice(['DEALER', 'SELLER', 'BUYER'])],
+                         indirect=True)
+def test_user_can_not_reset_password_with_invalid_data(user_data,
+                                                       client):
+    response = client.post(reverse("registration"), data=user_data)
+    user = CustomUserModel.objects.get(id=response.data['id'])
+    old_password = user_data['password']
+    new_password = "testpass12345"
+    password_reset_data = {"old_password": old_password,
+                           "new_password": new_password}
+    email = "nosuchmail"
+    response = client.put(reverse('password-reset-request'),
+                          data={"email": email})
+    assert response.status_code == 404
+    email = user_data['email']
+    response = client.put(reverse('password-reset-request'),
+                          data={"email": email})
+    assert response.status_code == 200
+    password_reset_link = f'{reverse("password-reset")}?user_id=999222333&' \
+                          f'password_reset_token=xxx'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 404
+    password_reset_link = f'{reverse("password-reset")}?user_id={user.pk}&' \
+                          f'password_reset_token=xxx'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 400
+    token = default_token_generator.make_token(user)
+    password_reset_link = f'{reverse("password-reset")}?user_id=999222333&' \
+                          f'password_reset_token={token}'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 404
+    password_reset_link = f'{reverse("password-reset")}?password_reset_token={token}'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 400
+    password_reset_link = f'{reverse("password-reset")}?user_id={user.pk}'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 400
+    password_reset_data['new_password'] = 'i'
+    password_reset_link = f'{reverse("password-reset")}?user_id={user.pk}&' \
+                          f'password_reset_token={token}'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 400
+    password_reset_data['new_password'] = new_password
+    password_reset_data['old_password'] = 'notanoldpassword'
+    password_reset_link = f'{reverse("password-reset")}?user_id={user.pk}&' \
+                          f'password_reset_token={token}'
+    response = client.put(password_reset_link, data=password_reset_data)
+    assert response.status_code == 400
 
 
 @pytest.mark.parametrize('unverified_user', ['DEALER'], indirect=True)
