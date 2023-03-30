@@ -4,6 +4,7 @@ and celery beat schedule parameters"""
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'root.settings')
 
@@ -29,4 +30,19 @@ app.conf.beat_schedule = {
         'task': "purchase_cars_for_dealers",
         'schedule': 600.0,
     },
+    # Executes at night, collects seller previous day stats
+    'collect_seller_statistics': {
+        'task': "seller_stats",
+        'schedule': crontab(hour=1, minute=0)
+    },
+    # Executes at night, collects dealer previous day stats
+    'collect_dealer_statistics': {
+        'task': "dealer_stats",
+        'schedule': crontab(hour=1, minute=30)
+    },
+    # Executes at night, collects buyer previous day stats
+    'collect_buyer_statistics': {
+        'task': "buyer_stats",
+        'schedule': crontab(hour=2, minute=0)
+    }
 }
