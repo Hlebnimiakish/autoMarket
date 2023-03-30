@@ -13,7 +13,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from promo.models import SellerPromoModel
 from promo.serializers import SellersPromoSerializer
-from user.models import AutoDealerModel
+from user.models import AutoDealerModel, DealerFromSellerPurchaseNumber
 
 from .models import SellerSalesHistoryModel
 
@@ -53,6 +53,7 @@ def best_deal_finder(car_prices: list) -> list[dict[str,
                                                     Decimal]] | None:
     """Takes list of possible car prices and returns best deal possible deal to
     make or None if there are no possible prices"""
+    chosen_deals = None
     if car_prices:
         best_price = min(price['price'] for price in car_prices)
         chosen_deals = [{'seller_park': car_price['car_park'],
@@ -60,8 +61,6 @@ def best_deal_finder(car_prices: list) -> list[dict[str,
                          'price': car_price['price']}
                         for car_price in car_prices
                         if car_price['price'] == best_price]
-    else:
-        chosen_deals = None
     return chosen_deals
 
 
@@ -96,6 +95,13 @@ def make_a_deal_and_create_dealer_park(chosen_deal: dict,
                                                    sold_cars_quantity=bought_cars_number,
                                                    deal_sum=bought_cars_number *
                                                    chosen_deal['price'])
+            purchase_number_model = \
+                DealerFromSellerPurchaseNumber.objects.get_or_create(seller=seller_park.seller,
+                                                                     dealer=dealer)[0]
+            current_purchase_number = int(purchase_number_model.purchase_number)
+            purchase_number_model.purchase_number = \
+                current_purchase_number + bought_cars_number
+            purchase_number_model.save()
 
 
 @shared_task(name='purchase_cars_for_dealers')

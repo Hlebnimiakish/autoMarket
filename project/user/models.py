@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
@@ -86,10 +88,10 @@ class CarBuyerModel(BaseModel):
 class DealerFromSellerPurchaseNumber(BaseModel):
     seller: ForeignKey = ForeignKey('AutoSellerModel', on_delete=models.CASCADE)
     dealer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
-    purchase_number: IntegerField = IntegerField(blank=True)
+    purchase_number: IntegerField = IntegerField(default=0)
 
 
 class BuyerFromDealerPurchaseNumber(BaseModel):
     buyer: ForeignKey = ForeignKey('CarBuyerModel', on_delete=models.CASCADE)
     dealer: ForeignKey = ForeignKey('AutoDealerModel', on_delete=models.CASCADE)
-    purchase_number: IntegerField = IntegerField(blank=True)
+    purchase_number: IntegerField = IntegerField(default=0)
