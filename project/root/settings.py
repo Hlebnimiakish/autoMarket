@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "sales_history",
     "car_spec",
     "discount",
+    "auto_market_stats",
 ]
 
 MIDDLEWARE = [

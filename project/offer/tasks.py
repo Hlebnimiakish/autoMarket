@@ -10,7 +10,7 @@ from django.utils import timezone
 from promo.models import DealerPromoModel
 from promo.serializers import DealersPromoSerializer
 from sales_history.models import CarBuyerHistoryModel, DealerSalesHistoryModel
-from user.models import CarBuyerModel
+from user.models import BuyerFromDealerPurchaseNumber, CarBuyerModel
 
 from .models import OfferModel
 from .serializers import OffersSerializer
@@ -95,6 +95,12 @@ def make_offer_deal(selected_park: dict,
                                             buyer=buyer)
         offer_instance.is_active = False
         offer_instance.save()
+        purchase_number_model = \
+            BuyerFromDealerPurchaseNumber.objects.get_or_create(buyer=buyer,
+                                                                dealer=dealer)[0]
+        current_purchase_number = int(purchase_number_model.purchase_number)
+        purchase_number_model.purchase_number = current_purchase_number + 1
+        purchase_number_model.save()
 
 
 @shared_task(name='make_deal_from_offer')
