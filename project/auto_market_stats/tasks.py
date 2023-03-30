@@ -8,7 +8,7 @@ from typing import Type
 
 from car_market.models import MarketAvailableCarModel
 from celery import shared_task
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from sales_history.models import (BaseSalesHistoryModel, CarBuyerHistoryModel,
                                   DealerSalesHistoryModel,
                                   SellerSalesHistoryModel)
@@ -25,15 +25,9 @@ def history_records_statistics_calculator(history_records:
         -> dict[str, int | Decimal]:
     """Calculates number of sold cars and revenue from given history records,
     returns dictionary with calculated data"""
-    sold_cars_number = 0
-    revenue = Decimal()
-    for record in history_records:
-        record_cars_quantity = int(record.sold_cars_quantity)
-        sold_cars_number = sold_cars_number + record_cars_quantity
-        deal_sum = Decimal(record.deal_sum)
-        revenue = revenue + deal_sum
-    return {"sold_cars_number": sold_cars_number,
-            "revenue": revenue}
+    values_dict = history_records.aggregate(sold_cars_number=Sum('sold_cars_quantity'),
+                                            revenue=Sum('deal_sum'))
+    return values_dict
 
 
 def additional_history_stats_calculator(history_records:
@@ -42,18 +36,13 @@ def additional_history_stats_calculator(history_records:
                                         user_type: str) -> dict[str, int | Decimal]:
     """Calculates number of bought cars and expenses from given history records,
     returns dictionary with calculated data"""
-    expenses = Decimal()
-    bought_cars_number = 0
-    for record in history_records:
-        if user_type == "buyer":
-            record_bought_cars_number = int(record.bought_quantity)
-        else:
-            record_bought_cars_number = int(record.sold_cars_quantity)
-        bought_cars_number = bought_cars_number + record_bought_cars_number
-        deal_sum = Decimal(record.deal_sum)
-        expenses = expenses + deal_sum
-    return {"bought_cars_number": bought_cars_number,
-            "expenses": expenses}
+    if user_type == "buyer":
+        values_dict = history_records.aggregate(bought_cars_number=Sum('bought_quantity'),
+                                                expenses=Sum('deal_sum'))
+    else:
+        values_dict = history_records.aggregate(bought_cars_number=Sum('sold_cars_quantity'),
+                                                expenses=Sum('deal_sum'))
+    return values_dict
 
 
 def most_sold_cars_finder(filter_param: str,
@@ -64,18 +53,16 @@ def most_sold_cars_finder(filter_param: str,
     """Takes in parameter to filter history records, user profile model, type of history
     records model and calculates the most sold cars model from all history records, returns
     market available car model of the most sold car or None if no records were found"""
+    most_sold_car_model = None
     history_records = history_records_model_type.objects.filter(**{filter_param: user_profile})
-    sold_cars_number = {}
-    for record in history_records:
-        car = record.sold_car_model.car_model
-        if car in sold_cars_number.keys():
-            sold_cars_number[car] = sold_cars_number[car] + int(record.sold_cars_quantity)
-        else:
-            sold_cars_number[car] = int(record.sold_cars_quantity)
-    most_sold_car = None
-    if sold_cars_number:
-        most_sold_car = max(sold_cars_number, key=lambda x: sold_cars_number[x])
-    return most_sold_car
+    sold_cars = \
+        history_records.values("sold_car_model").\
+        annotate(sold_quantity=Sum('sold_cars_quantity')).\
+        order_by('-sold_quantity')
+    if sold_cars:
+        most_sold_car = sold_cars[0]['sold_car_model']
+        most_sold_car_model = MarketAvailableCarModel.objects.get(id=most_sold_car)
+    return most_sold_car_model
 
 
 def history_records_collector(date: datetime.date,
@@ -143,8 +130,7 @@ def gather_seller_or_dealer_base_statistics(date: datetime.date,
                                               user_profile,
                                               user_history_model_type)
         uniq_buyers_number = \
-            len(purchase_number_model.objects.
-                filter(**{filter_param: user_profile}).values_list('id', flat=True))
+            purchase_number_model.objects.filter(**{filter_param: user_profile}).count()
         stats_model.sold_cars_number = sold_cars_number
         stats_model.total_revenue = total_revenue
         stats_model.avg_sold_car_price = avg_sold_car_price
@@ -190,6 +176,7 @@ def get_seller_statistics():
     """Celery task to be run at night, which calculates and saves to seller statistics
     models new statistics data"""
     date = datetime.date.today() - datetime.timedelta(days=1)
+    date = datetime.date.today()
     for seller in AutoSellerModel.objects.all():
         seller_stats = \
             OverallSellerStatisticsModel.objects.get_or_create(seller=seller)
