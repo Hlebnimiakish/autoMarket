@@ -12,6 +12,7 @@ djangorestframework-simplejwt = "*"
 django-filter = "*"
 celery = "*"
 redis = "*"
+gunicorn = "*"
 
 [dev-packages]
 pylint = "*"
