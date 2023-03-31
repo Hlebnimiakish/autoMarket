@@ -15,37 +15,9 @@ from .serializers import (DealerSearchCarSpecificationEstFieldsSerializer,
                           DealerSuitableCarModelsSerializer)
 
 
-@shared_task(name='find_dealers_suit_cars')
-def task_find_suit_cars_for_all_dealers():
-    """Celery script that checks all dealer specifications parameters,
-    finds suitable car models and adds suitable cars to corresponding model"""
-    for spec in DealerSearchCarSpecificationModel.objects.all():
-        dealer = spec.dealer
-        spec_data = DealerSearchCarSpecificationEstFieldsSerializer(spec).data
-        suit_cars = DealerSuitableCarModel.objects.get_or_create(dealer=dealer)[0]
-        suit_cars.car_model.clear()
-        str_list = ['transmission', 'body_type', 'engine_fuel_type', 'drive_unit', 'color']
-        bool_params = ["safe_controls", "parking_help", "climate_controls",
-                       "multimedia", "additional_safety", "other_additions"]
-        spec_actual_data = {}
-        for key, value in spec_data.items():
-            if key in str_list:
-                spec_actual_data[key] = value
-            if key in bool_params and value:
-                spec_actual_data[key] = value
-        cars = MarketAvailableCarModel.\
-            objects.filter(engine_volume__gte=spec_data['engine_volume'],
-                           year_of_production__gte=spec_data['min_year_of_production'],
-                           **spec_actual_data)
-        cars = list(cars)
-        suit_cars.car_model.add(*cars)
-
-
-@shared_task(name='find_suit_cars_for_dealer')
-def task_find_suit_cars_for_dealer(spec_data: dict):
-    """Celery script that takes specification model, checks it's parameters,
-    finds suitable car models and adds suitable cars to corresponding model"""
-    dealer_id = spec_data['dealer']
+def suit_cars_adder(dealer_id: int, spec_data: dict):
+    """Gets or creates dealer suitable car model instance for given dealer_id and adds
+    to it suitable car models based on given car specification data"""
     suit_cars = DealerSuitableCarModel.objects.get_or_create(dealer_id=dealer_id)[0]
     suit_cars.car_model.clear()
     str_list = ['transmission', 'body_type', 'engine_fuel_type', 'drive_unit', 'color']
@@ -63,6 +35,24 @@ def task_find_suit_cars_for_dealer(spec_data: dict):
                        **spec_actual_data)
     cars = list(cars)
     suit_cars.car_model.add(*cars)
+
+
+@shared_task(name='find_dealers_suit_cars')
+def task_find_suit_cars_for_all_dealers():
+    """Celery script that checks all dealer specifications parameters,
+    finds suitable car models and adds suitable cars to corresponding model"""
+    for spec in DealerSearchCarSpecificationModel.objects.all():
+        dealer_id = spec.dealer.pk
+        spec_data = DealerSearchCarSpecificationEstFieldsSerializer(spec).data
+        suit_cars_adder(dealer_id, spec_data)
+
+
+@shared_task(name='find_suit_cars_for_dealer')
+def task_find_suit_cars_for_dealer(spec_data: dict):
+    """Celery script that takes specification model, checks it's parameters,
+    finds suitable car models and adds suitable cars to corresponding model"""
+    dealer_id = spec_data['dealer']
+    suit_cars_adder(dealer_id, spec_data)
 
 
 def purchase_map_creator(discount_map: dict, current_purchase_number: int) -> dict[int, int]:

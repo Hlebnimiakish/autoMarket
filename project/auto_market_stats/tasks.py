@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Type
 
 from car_market.models import MarketAvailableCarModel
+from car_park.models import DealerCarParkModel, SellerCarParkModel
 from celery import shared_task
 from django.db.models import QuerySet, Sum
 from sales_history.models import (BaseSalesHistoryModel, CarBuyerHistoryModel,
@@ -61,7 +62,9 @@ def most_sold_cars_finder(filter_param: str,
         order_by('-sold_quantity')
     if sold_cars:
         most_sold_car = sold_cars[0]['sold_car_model']
-        most_sold_car_model = MarketAvailableCarModel.objects.get(id=most_sold_car)
+        most_sold_car_model = SellerCarParkModel.objects.get(id=most_sold_car).car_model
+        if filter_param == 'dealer':
+            most_sold_car_model = DealerCarParkModel.objects.get(id=most_sold_car).car_model
     return most_sold_car_model
 
 
@@ -176,7 +179,6 @@ def get_seller_statistics():
     """Celery task to be run at night, which calculates and saves to seller statistics
     models new statistics data"""
     date = datetime.date.today() - datetime.timedelta(days=1)
-    date = datetime.date.today()
     for seller in AutoSellerModel.objects.all():
         seller_stats = \
             OverallSellerStatisticsModel.objects.get_or_create(seller=seller)

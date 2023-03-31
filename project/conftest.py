@@ -10,4 +10,5 @@ pytest_plugins = ('user.user_fixtures',
                   'sales_history.history_fixtures',
                   'discount.discount_fixtures',
                   'session_fixtures',
+                  'auto_market_stats.stats_fixtures',
                   )
