@@ -12,3 +12,11 @@ COPY Pipfile Pipfile.lock /auto_market/
 RUN pipenv install --dev --system --deploy --ignore-pipfile
 
 COPY project /auto_market/
+
+COPY ./entrypoint.sh /
+COPY ./worker-entrypoint.sh /
+COPY ./beat-entrypoint.sh /
+
+RUN chmod +x /entrypoint.sh
+RUN chmod +x /worker-entrypoint.sh
+RUN chmod +x /beat-entrypoint.sh
