@@ -19,15 +19,26 @@ services:
     build:
       dockerfile: ./Dockerfile
     container_name: auto_market
-    command: bash -c "python manage.py makemigrations && 
-             python manage.py migrate && 
-             python manage.py runserver 0.0.0.0:8000"
+    entrypoint: ../entrypoint.sh
+    volumes:
+      - static:/static
     ports:
       - 8000:8000
     depends_on:
       - auto_market_db
     env_file:
       - .env
+
+  nginx:
+    build:
+      dockerfile: nginx/Dockerfile
+    container_name: nginx
+    volumes:
+      - static:/static
+    ports:
+      - 180:80
+    depends_on:
+      - auto_market_app
 
   redis:
     image: redis
@@ -39,7 +50,7 @@ services:
     container_name: celery
     build:
       dockerfile: ./Dockerfile
-    command: celery -A root worker -l info
+    entrypoint: ../worker-entrypoint.sh
     env_file:
       - .env
     depends_on:
@@ -52,6 +63,7 @@ services:
     build:
       dockerfile: ./Dockerfile
     command: celery -A root beat -l info
+    entrypoint: ../beat-entrypoint.sh
     env_file:
       - .env
     depends_on:
@@ -59,3 +71,6 @@ services:
       - auto_market_db
       - redis
       - celery
+
+volumes:
+  static:
